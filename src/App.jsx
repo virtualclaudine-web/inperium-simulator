@@ -239,8 +239,6 @@ export default function App() {
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
   const [loading, setLoading] = useState(false);
-  const [apiKey, setApiKey] = useState("");
-  const [showApiInput, setShowApiInput] = useState(false);
   const [sessionStarted, setSessionStarted] = useState(false);
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
@@ -256,15 +254,6 @@ export default function App() {
     }
   }, [input]);
 
-  const storedKey = () => {
-    try { return localStorage.getItem("inperium_api_key") || ""; } catch { return ""; }
-  };
-  const saveKey = (k) => {
-    try { localStorage.setItem("inperium_api_key", k); } catch {}
-    setApiKey(k);
-  };
-  const getKey = () => apiKey || storedKey();
-
   const startSession = (scenario) => {
     setSelectedScenario(scenario);
     setMessages([{ role: "assistant", content: scenario.opener }]);
@@ -279,8 +268,6 @@ export default function App() {
   };
 
   const sendMessage = async () => {
-    const key = getKey();
-    if (!key) { setShowApiInput(true); return; }
     if (!input.trim() || loading) return;
 
     const userMsg = { role: "user", content: input.trim() };
@@ -293,13 +280,10 @@ export default function App() {
       PRACTICE_SYSTEM + `\n\nSCENARIO: ${selectedScenario.label}\nPERSONA: ${selectedScenario.persona}`;
 
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
@@ -318,8 +302,7 @@ export default function App() {
   };
 
   const requestDebrief = async () => {
-    const key = getKey();
-    if (!key || loading) return;
+    if (loading) return;
     const debriefMsg = { role: "user", content: "DEBRIEF" };
     const newMessages = [...messages, debriefMsg];
     setMessages(newMessages);
@@ -327,13 +310,10 @@ export default function App() {
 
     const systemPrompt = PRACTICE_SYSTEM + `\n\nSCENARIO: ${selectedScenario.label}\nPERSONA: ${selectedScenario.persona}`;
     try {
-      const res = await fetch("https://api.anthropic.com/v1/messages", {
+      const res = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
-          "x-api-key": key,
-          "anthropic-version": "2023-06-01",
-          "anthropic-dangerous-direct-browser-access": "true",
         },
         body: JSON.stringify({
           model: "claude-sonnet-4-20250514",
@@ -685,9 +665,7 @@ export default function App() {
           {mode !== "home" && (
             <button style={styles.navBtn} onClick={reset}>← Back</button>
           )}
-          <button style={styles.navBtn} onClick={() => setShowApiInput(true)}>
-            {getKey() ? "API Key ✓" : "Set API Key"}
-          </button>
+
         </div>
       </div>
 
@@ -846,33 +824,7 @@ export default function App() {
         </div>
       )}
 
-      {/* API Key Modal */}
-      {showApiInput && (
-        <div style={styles.apiModal} onClick={e => { if (e.target === e.currentTarget) setShowApiInput(false); }}>
-          <div style={styles.apiBox}>
-            <div style={styles.apiTitle}>Anthropic API Key</div>
-            <div style={styles.apiSub}>
-              Enter your API key from <a href="https://console.anthropic.com" style={{ color: COLORS.gold }}>console.anthropic.com</a>. It is stored in your browser only and never sent anywhere except directly to the Anthropic API.
-            </div>
-            <input
-              style={styles.apiInput}
-              type="password"
-              placeholder="sk-ant-..."
-              defaultValue={getKey()}
-              id="api-key-input"
-            />
-            <button
-              style={styles.apiSave}
-              onClick={() => {
-                const val = document.getElementById("api-key-input").value.trim();
-                if (val) { saveKey(val); setShowApiInput(false); }
-              }}
-            >
-              Save key
-            </button>
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
