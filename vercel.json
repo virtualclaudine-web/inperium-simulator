@@ -1,5 +1,10 @@
 {
+  "functions": {
+    "api/chat.cjs": {
+      "runtime": "@vercel/node@3.0.0"
+    }
+  },
   "rewrites": [
-    { "source": "/api/(.*)", "destination": "/api/$1" }
+    { "source": "/api/chat", "destination": "/api/chat.cjs" }
   ]
 }
