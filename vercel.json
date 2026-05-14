@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/chat.cjs": {
-      "runtime": "@vercel/node@3.0.0"
-    }
-  },
   "rewrites": [
     { "source": "/api/chat", "destination": "/api/chat.cjs" }
   ]
