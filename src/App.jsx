@@ -334,48 +334,147 @@ Answer questions about the Inperium Communications Field Guide accurately and co
 
 const CATEGORIES = [
   {
-    id: "conversation",
-    icon: "💬",
+    id: "conversation", icon: "💬",
     title: "Starting the conversation",
     desc: "Opening with a new prospect, board member, or donor for the first time",
     scenarios: [
-      { id: "skeptical-ceo", label: "Skeptical CEO", persona: "You are Marcus, a 58-year-old CEO of a mid-sized human services nonprofit in Ohio. You've run this organization for 22 years. You've heard 'partnership' pitches before — they always end with someone losing control. You're polite but deeply skeptical.", opener: "I appreciate you making time. I'll be honest — I've been through two merger conversations in the past decade and both times it was a disaster. What makes this any different?" },
-      { id: "stable-org", label: "Stable Organization CEO", persona: "You are Robert, CEO of a stable, well-regarded nonprofit with surpluses for four consecutive years. You have no urgent problem. You're professionally curious but genuinely puzzled about what Inperium would offer you.", opener: "I appreciate the meeting. I have to say — we're in good shape. Financially stable, good reputation, strong board. I'm not sure what problem you're solving for us." },
+      { id: "skeptical-ceo", label: "Skeptical CEO", difficulty: "Hard",
+        persona: "You are Marcus, 58, CEO of a mid-sized human services nonprofit in Ohio for 22 years. You have heard partnership pitches before and they always end badly. You are polite but deeply skeptical and ask hard questions.",
+        opener: "I appreciate you making time. I'll be honest — I've been through two merger conversations in the past decade and both times it was a disaster. What makes this any different?" },
+      { id: "stable-org", label: "Stable Organization CEO", difficulty: "Medium",
+        persona: "You are Robert, CEO of a stable nonprofit with four consecutive surplus years. No urgent problem. Professionally curious but genuinely puzzled about what Inperium offers you.",
+        opener: "I appreciate the meeting. We're in good shape — financially stable, good reputation, strong board. I'm not sure what problem you're solving for us." },
+      { id: "conference-intro", label: "Conference Introduction", difficulty: "Easy",
+        persona: "You are a friendly but busy nonprofit executive at a sector conference. Just introduced to an Inperium leader. Open and curious but heading to a session soon — you have a short window.",
+        opener: "Good to meet you. So what does Inperium do exactly? I've heard the name but I don't really know what it is." },
+      { id: "generational-ceo", label: "Generational Planning CEO", difficulty: "Medium",
+        persona: "You are CEO of a 38-year-old disability services organization in Florida. Stable and well-run. Your question is about long-term sustainability — how this organization outlasts you and any single funding cycle. You ask strategic questions.",
+        opener: "I've been running this organization for 18 years and I'm thinking about what it needs to look like in another 20. I'm interested — but from a strategic angle, not because we're in trouble. How do I think about this?" },
+      { id: "prior-bad-merger", label: "Burned by Prior Merger", difficulty: "Hard",
+        persona: "You are CEO of a behavioral health nonprofit that went through a disastrous merger 8 years ago. You lost your name, half your staff, and years of trust. You are open to this conversation but every reassurance sounds like what they told you before.",
+        opener: "I'll be upfront — eight years ago I went through a merger that nearly destroyed this organization. We were promised nothing would change and everything changed. When you say 'affiliation' my guard goes up. What makes this structurally different?" },
     ]
   },
   {
-    id: "objections",
-    icon: "🛡",
+    id: "objections", icon: "🛡",
     title: "Handling objections",
-    desc: "Private equity concerns, independence fears, board resistance, and skeptics",
+    desc: "Private equity concerns, independence fears, board resistance, skeptics, and tough questions",
     scenarios: [
-      { id: "private-equity", label: "Private Equity Objection", persona: "You are David, a board member with 20 years in private equity. You're analytical. You see the pattern: aggregation, shared services, scale. You need to be convinced with hard structural facts, not mission language.", opener: "I've done this for twenty years. The structure you're describing — aggregating nonprofits, centralizing back-office, bond financing — that's a PE rollup. The nonprofit wrapper doesn't change the underlying model. Why should I think about this differently?" },
-      { id: "independence", label: "Independence Fear", persona: "You are Sandra, a long-serving board chair who built this organization over 30 years. Your biggest fear is losing what makes this organization special — its culture, its name, its independence. You are not hostile, just deeply protective.", opener: "My biggest concern is simple: we've spent thirty years building something. Our name means something in this community. I don't want to become a subsidiary of something larger and lose everything that makes us who we are." },
+      { id: "private-equity", label: "Private Equity Objection", difficulty: "Hard",
+        persona: "You are David, a board member with 20 years in private equity. Analytical, not hostile. You see the pattern: aggregation, shared services, scale, bond financing. You need hard structural facts, not mission language. You keep returning to the parallels.",
+        opener: "I've done this for twenty years. The structure you're describing — aggregating nonprofits, centralizing back-office, bond financing — that's a PE rollup. The nonprofit wrapper doesn't change the underlying model. Why should I think about this differently?" },
+      { id: "independence", label: "Independence Fear", difficulty: "Medium",
+        persona: "You are Sandra, board chair who built this organization over 30 years. Your fear is losing what makes it special — its culture, name, and community identity. Not hostile, just deeply protective.",
+        opener: "We've spent thirty years building something. Our name means something here. I don't want to become a subsidiary of something larger and lose everything that makes us who we are." },
+      { id: "culture-unique", label: "Our Culture Is Unique", difficulty: "Medium",
+        persona: "You are executive director of a community mental health organization famous for its warm, human-centered culture. Staff love it. Clients feel it. You are afraid affiliation will replace that culture with corporate standardization.",
+        opener: "I hear you on the infrastructure benefits. But what makes this organization work isn't the back-office systems — it's our culture. You can't standardize what we do. And I'm worried that's exactly what would happen." },
+      { id: "community-failure", label: "Community Will Think We Failed", difficulty: "Medium",
+        persona: "You are a board chair of a well-known 45-year community organization. Your deepest fear is perception — that people will think you couldn't handle it. You have been the pillar of this community for decades.",
+        opener: "My biggest fear isn't the structural stuff. It's what people will say. If we do this, people are going to think we failed. How do you respond to that?" },
+      { id: "too-good-true", label: "Too Good to Be True", difficulty: "Medium",
+        persona: "You are a thoughtful 25-year nonprofit veteran. Not hostile, just someone who has seen a lot of promises not kept. Every time something sounds this good there's a catch. You want to find it.",
+        opener: "I want to believe this. I really do. But in 25 years in this sector, whenever something sounds this good there's always something I'm missing. What's the catch? What do we actually give up?" },
+      { id: "transition-costs", label: "Can't Afford Transition Costs", difficulty: "Easy",
+        persona: "You are CFO of a small nonprofit with thin margins. Interested in long-term value but genuinely worried about short-term cash requirements. You ask practical, numbers-oriented questions.",
+        opener: "I'll be straight — transitions like this are expensive. Staff time, consultants, system migrations, operational disruption. Even if the long-term value is there, I'm not sure we can absorb the upfront cost. What does this actually cost us to get started?" },
+      { id: "state-regulatory", label: "State Regulators Won't Approve", difficulty: "Medium",
+        persona: "You are CEO of a heavily regulated behavioral health provider in a Southern state with a complicated Medicaid relationship. Genuinely worried about regulatory disruption, not just using it as an excuse.",
+        opener: "Our state licensing board is already difficult to work with. If they see a change in organizational structure they could pause our licenses or conduct a review we can't afford. Has Inperium actually done this in our kind of regulatory environment?" },
+      { id: "attorney-advisor", label: "Attorney or Financial Advisor", difficulty: "Hard",
+        persona: "You are a transactional attorney representing a nonprofit board considering affiliation. Paid to find problems. Not hostile but you ask precise, documented questions. You probe the legal structure, governance protections, and exit provisions carefully. You expect complete answers or clear referrals.",
+        opener: "Before we go further I want to understand the governance structure in detail. What are the exact protective powers in the affiliation agreement, how are they enforced, and what happens to those protections if Inperium's board changes?" },
     ]
   },
   {
-    id: "fear",
-    icon: "🤝",
+    id: "fear", icon: "🤝",
     title: "Addressing fear & anxiety",
-    desc: "Staff worry, donor concerns, board members in crisis — leading with empathy",
+    desc: "Staff worry, donor concerns, board members in crisis — leading with empathy first",
     scenarios: [
-      { id: "staff-anxiety", label: "Staff Anxiety", persona: "You are Diane, a program director who has worked here for 14 years. You heard 'affiliation' and immediately worried about layoffs, culture being destroyed, and corporate bureaucracy replacing the personal feel of the place.", opener: "I just want to be honest with you. People are scared. The word going around is that we're being 'acquired.' Are we going to lose jobs? Is everything we've built here going to change?" },
-      { id: "donor", label: "Concerned Major Donor", persona: "You are Helen, a donor who has given $50,000/year for eight years. You heard about the affiliation from a friend, not from the organization. You feel blindsided. You care deeply about the mission.", opener: "I heard from Janet at the gala that you're now part of some national organization. I have to say — I'm hurt that I had to hear this from someone else. Can you tell me what's actually happening here?" },
-      { id: "board-crisis", label: "Board in Crisis", persona: "You are Patricia, board chair of a nonprofit running deficits for three years. Now $4M in accumulated losses. You feel responsible. You're exhausted but protective of the organization's legacy.", opener: "We've been fighting this for three years. Every year we thought it would turn around. Now our auditors are flagging going-concern issues. I need to know — is this actually a solution, or just another conversation that goes nowhere?" },
+      { id: "staff-anxiety", label: "Staff Town Hall", difficulty: "Medium",
+        persona: "You are Diane, a 14-year program director. You speak for a room full of scared staff watching to see if leadership will be honest. You worry about layoffs, culture, and corporate bureaucracy.",
+        opener: "I just want to be honest with you. People are scared. The word going around is that we're being 'acquired.' Are we going to lose jobs? Is everything we've built here going to change?" },
+      { id: "informal-leader", label: "Skeptical Informal Leader", difficulty: "Hard",
+        persona: "You are a 20-year employee who is the person everyone in the building actually listens to. Not management — the trusted voice in the break room. You have seen three 'transformations' make things worse. If you become an advocate the whole staff follows. If you stay skeptical, you will quietly undermine the transition.",
+        opener: "I've been here longer than most of the leadership team. I've seen three transformations and every one made things worse for the people doing the actual work. What makes this one different and why should I trust it?" },
+      { id: "donor", label: "Concerned Major Donor", difficulty: "Medium",
+        persona: "You are Helen, a donor who has given $50,000/year for eight years. You heard about the affiliation from a friend at a gala, not from the organization. You feel blindsided. Not angry yet, but close.",
+        opener: "I heard from Janet at the gala that you're now part of some national organization. I'm hurt that I had to hear this from someone else. Can you tell me what's actually happening here?" },
+      { id: "small-donor", label: "Community Donor & Volunteer", difficulty: "Easy",
+        persona: "You are a local community member who has volunteered and given small amounts for 10 years. Not sophisticated about nonprofit finance but you love this organization. You ask simple, human questions.",
+        opener: "I saw something on Facebook about you all joining some big national group. My family has been involved here for years. Is this still going to be the same organization? Will the people I know still be here?" },
+      { id: "board-crisis", label: "Board in Crisis", difficulty: "Hard",
+        persona: "You are Patricia, board chair of a nonprofit with three years of deficits, $4M accumulated losses, and a going-concern flag from auditors. Exhausted but deeply protective of the organization's 40-year legacy.",
+        opener: "We've been fighting this for three years. Every year we thought it would turn around. Now our auditors are flagging going-concern issues. I need to know — is this actually a solution, or just another conversation that goes nowhere?" },
+      { id: "post-announcement-staff", label: "Staff After Announcement", difficulty: "Medium",
+        persona: "You are a clinical supervisor who just sat through the all-staff announcement. You have three specific fears: your reporting structure, your pay scale, and whether accreditation gets reviewed during the transition. You ask concrete questions.",
+        opener: "Thank you for the presentation. My team is going to come to me with specific questions. What exactly happens to our reporting structure? What happens to pay and benefits? And does our accreditation status get reviewed during this process?" },
+      { id: "state-funder", label: "State Funder Confusion", difficulty: "Medium",
+        persona: "You are a state Medicaid program officer who received correspondence from an Apis Services email address and doesn't know who that is. Not hostile but cautious — if the structure has changed you need documentation. You ask about licensing, billing, and organizational continuity.",
+        opener: "I've been receiving correspondence from an email domain I don't recognize — Apis Services. I need to understand whether there's been a change in organizational structure that requires us to update our licensing and billing records. Can you walk me through what's happened?" },
     ]
   },
   {
-    id: "full",
-    icon: "🎭",
-    title: "Full scenario",
-    desc: "Choose a specific character and situation for a longer, deeper practice session",
+    id: "peer", icon: "🔁",
+    title: "Peer & affiliate conversations",
+    desc: "Affiliate-to-affiliate, community partners, and conversations within the constellation",
     scenarios: [
-      { id: "skeptical-ceo-full", label: "Skeptical CEO", persona: "You are Marcus, a 58-year-old CEO of a mid-sized human services nonprofit in Ohio. You've run this organization for 22 years. You built it from scratch. You've heard 'partnership' pitches before — they always end with someone losing control. You're polite but deeply skeptical. You ask hard questions.", opener: "I appreciate you making time. I'll be honest — I've been through two merger conversations in the past decade and both times it was a disaster. What makes this any different?" },
-      { id: "board-crisis-full", label: "Board in Crisis", persona: "You are Patricia, board chair of a nonprofit that has been running deficits for three years. The temperature rose slowly — one bad year, then another, now $4M in accumulated losses. You feel responsible. You're exhausted but protective of the organization's legacy. You need real answers, not optimism.", opener: "We've been fighting this for three years. Every year we thought it would turn around. Now our auditors are flagging going-concern issues. I need to know — is this actually a solution, or just another conversation that goes nowhere?" },
-      { id: "private-equity-full", label: "Private Equity Objection", persona: "You are David, a board member with 20 years in private equity. You're not hostile — you're analytical. You see the pattern clearly: aggregation, shared services, scale. You need to be convinced with hard structural facts, not mission language.", opener: "I've done this for twenty years. The structure you're describing — aggregating nonprofits, centralizing back-office, bond financing — that's a PE rollup. The nonprofit wrapper doesn't change the underlying model. Why should I think about this differently?" },
-      { id: "donor-full", label: "Concerned Major Donor", persona: "You are Helen, a donor who has given $50,000/year for eight years to a nonprofit that just affiliated with Inperium. You heard about it from a friend, not from the organization. You feel blindsided. You care deeply about the mission.", opener: "I heard from Janet at the gala that you're now part of some national organization. I have to say — I'm hurt that I had to hear this from someone else. Can you tell me what's actually happening here?" },
-      { id: "staff-full", label: "Staff Anxiety", persona: "You are Diane, a program director who has worked at this nonprofit for 14 years. You've seen leadership come and go. You love this organization. You heard 'affiliation' and immediately worried about layoffs, culture being destroyed, and corporate bureaucracy.", opener: "I just want to be honest with you. People are scared. The word going around is that we're being 'acquired.' Are we going to lose jobs? Is everything we've built here going to change?" },
-      { id: "altitude-drill", label: "Altitude Drill", persona: "You are a neutral practice partner running the Altitude Drill from Section 9. Ask the user to deliver each altitude. After each one, give brief real-time feedback: right length? correct structure? language issues? Then move to the next.", opener: "Let's run the Altitude Drill. I'll play a curious stranger at a conference. Start with your 30-second answer to: 'So what does Inperium do?'" },
+      { id: "affiliate-to-affiliate", label: "Affiliate to Prospective Affiliate", difficulty: "Easy",
+        persona: "You are a prospective affiliate CEO meeting with a current affiliate leader. You specifically asked to speak to someone who has been through it, not Inperium staff. You want honest answers about what was hard and whether they'd do it again.",
+        opener: "I really appreciate you making time for this. I specifically wanted to talk to someone who's been through it rather than hearing the sales pitch. What was actually hard about this, and would you do it again?" },
+      { id: "skeptical-peer", label: "Skeptical Peer from Different Sector", difficulty: "Medium",
+        persona: "You are CEO of a supportive housing organization. You've heard Inperium described as mostly for disability providers and wonder whether the model works for organizations like yours with different regulatory environments and funding streams.",
+        opener: "I've heard a lot about Inperium but mostly in the context of disability services. We do supportive housing — very different regulatory environment, different funding streams, different everything. Is this model actually built for organizations like us?" },
+      { id: "community-partner", label: "Community Partner After Close", difficulty: "Easy",
+        persona: "You are a long-time community partner organization. You make referrals, collaborate on programs, share funders. You heard about the affiliation through the grapevine and you're not sure what it means for your working relationship.",
+        opener: "I've been hearing about the Inperium affiliation and I wanted to reach out directly. Will the same people still be in place? Will our referral arrangements stay the same? Should I be talking to anyone different now?" },
+      { id: "board-member-peer", label: "Board Member Peer Conversation", difficulty: "Medium",
+        persona: "You are a board member of a prospective affiliate having an informal conversation with a board member from a current affiliate at a sector event. You want the unfiltered board perspective — what governance actually looks like from the inside after affiliation.",
+        opener: "So you've been through the affiliation process. I'm on a board that's been approached and I want the honest board perspective — not the CEO's, not Inperium's. How has governance actually worked post-affiliation? Does your board still have real authority?" },
+    ]
+  },
+  {
+    id: "recovery", icon: "↩️",
+    title: "Recovery & difficult situations",
+    desc: "Meetings that went sideways, sensitive follow-ups, and navigating hard moments",
+    scenarios: [
+      { id: "meeting-went-sideways", label: "Recovery After a Bad Meeting", difficulty: "Hard",
+        persona: "You are a board chair whose first meeting with an Inperium representative two days ago went badly — it moved too fast and a board member raised the private equity comparison and got a defensive answer. You agreed to a follow-up call but you're guarded. You need to see something different.",
+        opener: "I agreed to this call but I want to be honest — our last conversation didn't go well. My board member felt their concerns weren't being heard. What I'm looking for today is different from what I got last time." },
+      { id: "ceo-job-concern", label: "CEO Privately Worried About Their Job", difficulty: "Hard",
+        persona: "You are a CEO genuinely interested in affiliation for the mission. But your deepest fear is being replaced. You won't say this directly but you keep asking questions that circle around it: CEO selection, performance accountability, what 'protected' really means in practice.",
+        opener: "I want to understand the CEO relationship more deeply. I know it's a protected power — but what does that mean in practice? If Inperium's leadership has concerns about how an affiliate is being run, what actually happens?" },
+      { id: "narrative-vacuum", label: "Community Narrative Gone Wrong", difficulty: "Hard",
+        persona: "You are an affiliate CEO in crisis: the local newspaper ran a story describing the affiliation as an 'acquisition by a Philadelphia-based company.' Community members are calling. A major funder has put their next gift on hold. You need to know exactly what to do and what to say to each audience.",
+        opener: "We have a serious problem. The local paper ran a story this morning describing what we did as being 'acquired by a for-profit company in Philadelphia.' My phone is ringing, a board member is upset, and our biggest funder just paused their next gift. I need to know exactly what to do." },
+      { id: "board-resignation", label: "Board Members Threatening to Resign", difficulty: "Hard",
+        persona: "You are a board chair two weeks from the affiliation vote. Four of your eleven board members have told you privately they will resign if it passes. They are good people who genuinely believe this is wrong. The vote is in two weeks.",
+        opener: "I need your honest advice. We're two weeks from our vote and four of my board members have told me they'll resign if it passes. These aren't obstructionists — they're people I respect. They genuinely believe this is wrong. I don't want to lose them. What do I do?" },
+    ]
+  },
+  {
+    id: "drills", icon: "⚡",
+    title: "Practice drills",
+    desc: "Focused skill drills — altitude, objections, stories, silence, consistency, and elevation",
+    scenarios: [
+      { id: "altitude-drill", label: "Altitude Drill", difficulty: "Easy",
+        persona: "You are a neutral practice partner running the Altitude Drill. Ask the user to deliver each of the three altitudes (30 seconds, 3 minutes, 10-minute structure). After each one give structured feedback: right length? correct structure? language issues? Then move to the next.",
+        opener: "Let's run the Altitude Drill. I'll play a curious stranger at a conference. Start with your 30-second answer to: 'So what does Inperium do?'" },
+      { id: "objection-rapid", label: "Rapid Objection Fire", difficulty: "Hard",
+        persona: "You are a practice partner running rapid-fire objection drills. Fire one objection at a time. After each response give a 2-3 sentence judgment: did they lead with the fear behind the objection? Proof-first sequencing? Any defensive language? Then fire the next. Mix common and less common objections.",
+        opener: "Rapid fire — 6 objections, no notes. Ready? First one: 'This sounds like private equity with a nonprofit wrapper.'" },
+      { id: "story-drop", label: "Story Drop Drill", difficulty: "Medium",
+        persona: "You are a practice partner running Story Drop drills. Give the user a situation and ask them to choose and tell the right story from the story library in under 90 seconds. After each story give feedback: Did they start with the person served? Did they keep the difficulty in? Right story choice?",
+        opener: "Story Drop drill. I'll give you a situation and you tell me the right story in under 90 seconds. Start with the person served, not the organizational mechanics. Ready? Situation: A board chair who's been running deficits for two years. She's exhausted and ashamed and wondering if affiliation means she failed. Go." },
+      { id: "silence-drill", label: "Silence & Stat-Then-Meaning Drill", difficulty: "Easy",
+        persona: "You are a practice partner running two connected drills. First, ask the user to deliver a strong proof statement and hold silence for at least 8 seconds before adding the meaning sentence. Coach them if they break too early. Then drill the Stat-Then-Meaning rule: give them a statistic and ask for the meaning sentence.",
+        opener: "Two drills in one. First: deliver the bond market proof statement, then hold silence for 10 full seconds. I'll time you. The temptation to fill the silence is the whole point. Go ahead." },
+      { id: "consistency-test", label: "Four-Question Consistency Check", difficulty: "Easy",
+        persona: "You are a practice partner running the Four-Question Consistency Test. Walk the user through all four questions before a hypothetical meeting: (1) Leading with their concern or your solution? (2) Legal mandate visible in first 90 seconds? (3) One human detail included? (4) Space left for what's really on their mind?",
+        opener: "Let's run the Four-Question Consistency Test. Imagine you're about to walk into a first meeting with a board chair at a financially stressed nonprofit. Answer these four questions out loud. Question one: What is the first sentence out of your mouth — is it about Inperium's capabilities or about proof?" },
+      { id: "lane-elevation", label: "Communication Lane & Elevation Drill", difficulty: "Medium",
+        persona: "You are a practice partner running the Communication Lane elevation drill. Start with a Red lane question and gradually escalate into Yellow then Green lane territory. The user must recognize when the conversation has moved beyond their lane and execute a smooth, professional handoff. Push a little after each handoff to test the boundary.",
+        opener: "You're an affiliate CEO at a community event. I'll play a colleague who just asked about Inperium. I'll escalate the questions — your job is to recognize when it's time to hand off and execute it smoothly. Here we go: 'So I keep hearing about Inperium. You're one of the affiliates, right? What is it exactly?'" },
     ]
   }
 ];
@@ -559,44 +658,44 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.15);border-radius:2px}`}</style>
       {hdr(null, null, false)}
-      <div style={{ flex: 1, padding: "2.5rem 2rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+      <div style={{ flex: 1, padding: "2rem" }}>
 
-        <div style={{ marginBottom: "2rem" }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 10, fontWeight: 500 }}>Practice Simulator</div>
-          <h1 style={{ fontSize: 22, fontWeight: 600, color: N, marginBottom: 8, lineHeight: 1.3 }}>What do you want to practice?</h1>
-          <p style={{ fontSize: 14, color: M, lineHeight: 1.65, maxWidth: 480 }}>Each session puts you in a real conversation. End it whenever you're ready to see your score and feedback.</p>
+        <div style={{ marginBottom: "1.75rem", maxWidth: 560 }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 8, fontWeight: 500 }}>Practice Simulator</div>
+          <h1 style={{ fontSize: 20, fontWeight: 600, color: N, marginBottom: 6, lineHeight: 1.3 }}>What do you want to practice?</h1>
+          <p style={{ fontSize: 13, color: M, lineHeight: 1.6 }}>Choose a category below. End the session whenever you're ready to see your score and feedback.</p>
         </div>
 
-        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10 }}>Practice categories</div>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
+        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8 }}>Practice categories</div>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 8, marginBottom: 8, maxWidth: 680 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
-              style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem 1.1rem", cursor: "pointer", transition: "all 0.15s", background: W, display: "flex", alignItems: "flex-start", gap: 12 }}
+              style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", transition: "all 0.15s", background: W, display: "flex", alignItems: "flex-start", gap: 10 }}
               onMouseEnter={e => { e.currentTarget.style.borderColor = GL; e.currentTarget.style.background = "rgba(200,146,42,0.03)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = W; }}>
-              <div style={{ width: 32, height: 32, borderRadius: 6, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, marginTop: 1 }}>{cat.icon}</div>
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.background = W; }}>
+              <div style={{ width: 30, height: 30, borderRadius: 6, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15, marginTop: 1 }}>{cat.icon}</div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 3 }}>{cat.title}</div>
-                <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>{cat.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 2 }}>{cat.title}</div>
+                <div style={{ fontSize: 12, color: M, lineHeight: 1.45 }}>{cat.desc}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, marginTop: 20 }}>Reference</div>
+        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8, marginTop: 18 }}>Reference</div>
         <div onClick={() => setScreen("reference")}
-          style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem 1.1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 14 }}
+          style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, maxWidth: 680 }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.background = "rgba(13,34,64,0.02)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = W; }}>
-          <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📖</div>
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.background = W; }}>
+          <div style={{ width: 30, height: 30, borderRadius: 6, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>📖</div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
               <span style={{ fontSize: 13, fontWeight: 600, color: N }}>Field Guide reference</span>
-              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.07)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
+              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.07)", color: N, padding: "2px 7px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
             </div>
-            <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>Look up exact language, objection responses, which story fits a situation, words to avoid, and the Credibility Stack.</div>
+            <div style={{ fontSize: 12, color: M, lineHeight: 1.45 }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
           </div>
-          <div style={{ color: M, fontSize: 16, flexShrink: 0 }}>→</div>
+          <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
         </div>
 
       </div>
@@ -674,8 +773,8 @@ export default function App() {
           <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setStartTime(Date.now()); setElapsed(0); }}
             style={{ fontSize: 11, color: M, background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", padding: 0 }}>Restart</button>
           <button onClick={endSession} disabled={exchanges < 2 || loading}
-            style={{ background: exchanges >= 2 ? N : "transparent", border: exchanges >= 2 ? "none" : `0.5px solid ${B}`, color: exchanges >= 2 ? W : M, padding: "7px 16px", borderRadius: 8, cursor: exchanges >= 2 ? "pointer" : "not-allowed", fontSize: 12, opacity: loading ? 0.5 : 1, transition: "all 0.2s" }}>
-            {exchanges < 2 ? `End & get feedback (${2 - exchanges} more ${2 - exchanges === 1 ? "exchange" : "exchanges"} needed)` : "End conversation & get feedback →"}
+            style={{ background: exchanges >= 2 ? G : S, border: exchanges >= 2 ? "none" : `1px solid ${B}`, color: exchanges >= 2 ? W : M, padding: "8px 18px", borderRadius: 8, cursor: exchanges >= 2 ? "pointer" : "not-allowed", fontSize: 12, fontWeight: exchanges >= 2 ? 600 : 400, opacity: loading ? 0.5 : 1, transition: "all 0.2s" }}>
+            {exchanges < 2 ? `${2 - exchanges} more ${2 - exchanges === 1 ? "exchange" : "exchanges"} to unlock feedback` : "End conversation & get feedback →"}
           </button>
         </div>
       </div>
@@ -684,49 +783,72 @@ export default function App() {
   );
 
   if (screen === "scorecard") return (
-    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.15);border-radius:2px}`}</style>
       {hdr(null, "Session complete")}
-      <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem", maxWidth: 700, margin: "0 auto", width: "100%" }}>
-        <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: G, marginBottom: 6 }}>Session complete</div>
-        <div style={{ fontSize: 20, fontWeight: 500, color: N, marginBottom: 4 }}>{category?.title} · {scenario?.label}</div>
-        <div style={{ fontSize: 13, color: M, marginBottom: "1.5rem" }}>{exchanges} {exchanges === 1 ? "exchange" : "exchanges"} · {fmtTime(elapsed)}</div>
+      <div style={{ padding: "1rem 1.5rem 0.75rem", borderBottom: `1px solid ${B}`, flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: N }}>{category?.title} · {scenario?.label}</div>
+        <div style={{ fontSize: 12, color: M, marginTop: 2 }}>{exchanges} {exchanges === 1 ? "exchange" : "exchanges"} · {fmtTime(elapsed)}</div>
+      </div>
+      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
 
-        {debrief && <>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: "1.25rem" }}>
-            <div style={{ background: S, borderRadius: 8, padding: "1rem" }}>
-              <div style={{ fontSize: 12, color: M, marginBottom: 4 }}>Session score</div>
-              <div style={{ fontSize: 32, fontWeight: 500, color: N }}>{debrief.score} <span style={{ fontSize: 16, color: M, fontWeight: 400 }}>/ 8</span></div>
+        {/* Left: conversation transcript */}
+        <div style={{ flex: 1, overflowY: "auto", padding: "1.25rem 1.5rem", borderRight: `1px solid ${B}` }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: "1rem" }}>Conversation</div>
+          {messages.map((m, i) => (
+            <div key={i} style={{ marginBottom: "1rem" }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: m.role === "user" ? G : M, marginBottom: 4, textAlign: m.role === "user" ? "right" : "left" }}>
+                {m.role === "user" ? "You" : scenario?.label}
+              </div>
+              <div style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                <div style={{ maxWidth: "85%", padding: "0.7rem 0.9rem", borderRadius: m.role === "user" ? "10px 10px 2px 10px" : "10px 10px 10px 2px", background: m.role === "user" ? N : S, border: m.role === "user" ? "none" : `1px solid ${B}`, fontSize: 13, lineHeight: 1.65, color: m.role === "user" ? W : T, whiteSpace: "pre-wrap", fontStyle: m.role === "assistant" ? "italic" : "normal" }}>
+                  {m.content}
+                </div>
+              </div>
             </div>
-            <div style={{ background: S, borderRadius: 8, padding: "1rem" }}>
-              <div style={{ fontSize: 12, color: M, marginBottom: 6 }}>Strongest dimension</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: N }}>{debrief.strongest}</div>
+          ))}
+        </div>
+
+        {/* Right: feedback panel */}
+        <div style={{ width: 300, flexShrink: 0, overflowY: "auto", padding: "1.25rem" }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: "1rem" }}>Feedback</div>
+
+          {debrief && <>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: "1.25rem" }}>
+              <div style={{ background: S, borderRadius: 8, padding: "0.75rem" }}>
+                <div style={{ fontSize: 11, color: M, marginBottom: 3 }}>Score</div>
+                <div style={{ fontSize: 26, fontWeight: 700, color: N }}>{debrief.score}<span style={{ fontSize: 13, color: M, fontWeight: 400 }}> / 8</span></div>
+              </div>
+              <div style={{ background: S, borderRadius: 8, padding: "0.75rem" }}>
+                <div style={{ fontSize: 11, color: M, marginBottom: 3 }}>Strongest</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: N, lineHeight: 1.4 }}>{debrief.strongest}</div>
+              </div>
             </div>
-          </div>
 
-          <div style={{ border: `0.5px solid ${B}`, borderRadius: 10, padding: "1.25rem", marginBottom: "1.25rem" }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, marginBottom: "1rem" }}>Score breakdown</div>
-            <ScoreBar label="Aspiration Clarity" score={debrief.aspiration} />
-            <ScoreBar label="Constraint Discovery" score={debrief.constraint} />
-            <ScoreBar label="Decision Framing" score={debrief.decision} />
-            <ScoreBar label="Simplicity & Confidence" score={debrief.simplicity} />
-          </div>
-
-          <div style={{ border: `0.5px solid ${B}`, borderRadius: 10, padding: "1.25rem", marginBottom: "1.5rem" }}>
-            <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: G, marginBottom: 8 }}>Coach note</div>
-            <div style={{ fontSize: 14, color: T, lineHeight: 1.75, fontStyle: "italic", marginBottom: "1rem" }}>{debrief.note}</div>
-            <div style={{ borderTop: `0.5px solid ${B}`, paddingTop: 12 }}>
-              <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, marginBottom: 5 }}>Focus for next time</div>
-              <div style={{ fontSize: 13, color: T, lineHeight: 1.6 }}>{debrief.focus}</div>
+            <div style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem", marginBottom: "1rem" }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: "0.75rem" }}>Score breakdown</div>
+              <ScoreBar label="Aspiration Clarity" score={debrief.aspiration} />
+              <ScoreBar label="Constraint Discovery" score={debrief.constraint} />
+              <ScoreBar label="Decision Framing" score={debrief.decision} />
+              <ScoreBar label="Simplicity & Confidence" score={debrief.simplicity} />
             </div>
-          </div>
-        </>}
 
-        <div style={{ display: "flex", gap: 10 }}>
-          <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); setScreen("practice"); }}
-            style={{ flex: 1, background: S, border: `0.5px solid ${BS}`, color: T, padding: 10, borderRadius: 8, cursor: "pointer", fontSize: 13 }}>Try again</button>
-          <button onClick={goHome}
-            style={{ flex: 1, background: N, border: "none", color: W, padding: 10, borderRadius: 8, cursor: "pointer", fontSize: 13 }}>New scenario</button>
+            <div style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem", marginBottom: "1.25rem" }}>
+              <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: G, fontWeight: 500, marginBottom: 8 }}>Coach note</div>
+              <div style={{ fontSize: 13, color: T, lineHeight: 1.7, fontStyle: "italic", marginBottom: "0.75rem" }}>{debrief.note}</div>
+              <div style={{ borderTop: `1px solid ${B}`, paddingTop: 10 }}>
+                <div style={{ fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 5 }}>Focus for next time</div>
+                <div style={{ fontSize: 12, color: T, lineHeight: 1.6 }}>{debrief.focus}</div>
+              </div>
+            </div>
+          </>}
+
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); setScreen("practice"); }}
+              style={{ background: S, border: `1.5px solid rgba(13,34,64,0.2)`, color: N, padding: "10px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>Try again</button>
+            <button onClick={goHome}
+              style={{ background: N, border: "none", color: W, padding: "10px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500 }}>← New scenario</button>
+          </div>
         </div>
       </div>
     </div>
