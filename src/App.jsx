@@ -658,16 +658,16 @@ export default function App() {
     <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.15);border-radius:2px}`}</style>
       {hdr(null, null, false)}
-      <div style={{ flex: 1, padding: "2rem" }}>
+      <div style={{ flex: 1, padding: "2rem 2rem 2rem 2rem" }}>
 
-        <div style={{ marginBottom: "1.75rem", maxWidth: 560 }}>
+        <div style={{ marginBottom: "1.75rem" }}>
           <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 8, fontWeight: 500 }}>Practice Simulator</div>
           <h1 style={{ fontSize: 20, fontWeight: 600, color: N, marginBottom: 6, lineHeight: 1.3 }}>What do you want to practice?</h1>
-          <p style={{ fontSize: 13, color: M, lineHeight: 1.6 }}>Choose a category below. End the session whenever you're ready to see your score and feedback.</p>
+          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, maxWidth: 500 }}>Choose a category below. End the session whenever you're ready to see your score and feedback.</p>
         </div>
 
         <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8 }}>Practice categories</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(280px, 1fr))", gap: 8, marginBottom: 8, maxWidth: 680 }}>
+        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
               style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", transition: "all 0.15s", background: W, display: "flex", alignItems: "flex-start", gap: 10 }}
@@ -684,7 +684,7 @@ export default function App() {
 
         <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8, marginTop: 18 }}>Reference</div>
         <div onClick={() => setScreen("reference")}
-          style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, maxWidth: 680 }}
+          style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}
           onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.background = "rgba(13,34,64,0.02)"; }}
           onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.background = W; }}>
           <div style={{ width: 30, height: 30, borderRadius: 6, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>📖</div>
