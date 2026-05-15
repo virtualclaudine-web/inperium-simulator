@@ -556,40 +556,49 @@ export default function App() {
   );
 
   if (screen === "home") return (
-    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.15);border-radius:2px}`}</style>
       {hdr(null, null, false)}
-      <div style={{ flex: 1, padding: "2rem 1.5rem", maxWidth: 820, margin: "0 auto", width: "100%" }}>
-        <div style={{ fontSize: 11, letterSpacing: "0.12em", textTransform: "uppercase", color: G, marginBottom: 8 }}>What do you want to practice?</div>
-        <h1 style={{ fontSize: 28, fontWeight: "normal", color: N, marginBottom: 8, lineHeight: 1.25 }}>Choose a category to begin.</h1>
-        <p style={{ fontSize: 13, color: M, lineHeight: 1.6, marginBottom: "1.75rem", maxWidth: 500 }}>Each session puts you in a real conversation. End it whenever you're ready to get your feedback and score.</p>
-        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: 10 }}>
+      <div style={{ flex: 1, padding: "2.5rem 2rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+
+        <div style={{ marginBottom: "2rem" }}>
+          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 10, fontWeight: 500 }}>Practice Simulator</div>
+          <h1 style={{ fontSize: 22, fontWeight: 600, color: N, marginBottom: 8, lineHeight: 1.3 }}>What do you want to practice?</h1>
+          <p style={{ fontSize: 14, color: M, lineHeight: 1.65, maxWidth: 480 }}>Each session puts you in a real conversation. End it whenever you're ready to see your score and feedback.</p>
+        </div>
+
+        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10 }}>Practice categories</div>
+        <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 8 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
-              style={{ border: `0.5px solid ${B}`, borderRadius: 10, padding: "1.1rem 1.25rem", cursor: "pointer", transition: "border-color 0.15s", background: W }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = GL}
-              onMouseLeave={e => e.currentTarget.style.borderColor = B}>
-              <div style={{ width: 36, height: 36, borderRadius: 8, background: S, display: "flex", alignItems: "center", justifyContent: "center", marginBottom: 10, fontSize: 18 }}>{cat.icon}</div>
-              <div style={{ fontSize: 14, fontWeight: 500, color: N, marginBottom: 4 }}>{cat.title}</div>
-              <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>{cat.desc}</div>
+              style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem 1.1rem", cursor: "pointer", transition: "all 0.15s", background: W, display: "flex", alignItems: "flex-start", gap: 12 }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = GL; e.currentTarget.style.background = "rgba(200,146,42,0.03)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = W; }}>
+              <div style={{ width: 32, height: 32, borderRadius: 6, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, marginTop: 1 }}>{cat.icon}</div>
+              <div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 3 }}>{cat.title}</div>
+                <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>{cat.desc}</div>
+              </div>
             </div>
           ))}
         </div>
+
+        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, marginTop: 20 }}>Reference</div>
         <div onClick={() => setScreen("reference")}
-          style={{ border: `0.5px solid ${BS}`, borderRadius: 10, padding: "1.1rem 1.25rem", cursor: "pointer", background: W, transition: "border-color 0.15s" }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = N}
-          onMouseLeave={e => e.currentTarget.style.borderColor = BS}>
-          <div style={{ display: "flex", alignItems: "flex-start", gap: 14 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 8, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>📖</div>
-            <div>
-              <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 4 }}>
-                <div style={{ fontSize: 14, fontWeight: 500, color: N }}>Field Guide reference</div>
-                <span style={{ fontSize: 10, background: "rgba(13,34,64,0.07)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em" }}>Quick lookup</span>
-              </div>
-              <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>Not sure what to say? Look up exact language, objection responses, which story fits a situation, words to avoid, and the Credibility Stack — all sourced directly from the Field Guide.</div>
+          style={{ border: `1px solid ${B}`, borderRadius: 8, padding: "1rem 1.1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 14 }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.background = "rgba(13,34,64,0.02)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = B; e.currentTarget.style.background = W; }}>
+          <div style={{ width: 32, height: 32, borderRadius: 6, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📖</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: N }}>Field Guide reference</span>
+              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.07)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
             </div>
+            <div style={{ fontSize: 12, color: M, lineHeight: 1.5 }}>Look up exact language, objection responses, which story fits a situation, words to avoid, and the Credibility Stack.</div>
           </div>
+          <div style={{ color: M, fontSize: 16, flexShrink: 0 }}>→</div>
         </div>
+
       </div>
     </div>
   );
