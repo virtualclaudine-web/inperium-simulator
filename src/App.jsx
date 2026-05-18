@@ -660,10 +660,10 @@ export default function App() {
       {hdr(null, null, false)}
       <div style={{ flex: 1, padding: "2.5rem 2.5rem 2rem" }}>
 
-        <div style={{ marginBottom: "2rem", textAlign: "center" }}>
-          <h1 style={{ fontSize: 28, fontWeight: 700, color: N, marginBottom: 6, lineHeight: 1.2, fontFamily: "Georgia,serif" }}>What do you want to practice?</h1>
-          <p style={{ fontSize: 15, color: G, lineHeight: 1.5, fontStyle: "italic", marginBottom: 8, fontFamily: "Georgia,serif" }}>Real conversations. Real feedback.</p>
-          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
+        <div style={{ marginBottom: "2.5rem", textAlign: "center" }}>
+          <h1 style={{ fontSize: 52, fontWeight: 700, color: N, marginBottom: 10, lineHeight: 1.1, fontFamily: "Georgia,serif" }}>What do you want to practice?</h1>
+          <p style={{ fontSize: 26, color: G, lineHeight: 1.4, fontStyle: "italic", marginBottom: 14, fontFamily: "Georgia,serif" }}>Real conversations. Real feedback.</p>
+          <p style={{ fontSize: 14, color: M, lineHeight: 1.7, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
         </div>
 
         <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Practice categories</div>
