@@ -507,18 +507,18 @@ function parseDebrief(text) {
   };
 }
 
-const N = "#0D2240";
-const G = "#A8721A";
-const GL = "#C8922A";
-const W = "#ffffff";
-const S = "#f5f7fa";
-const B = "rgba(13,34,64,0.1)";
-const BS = "rgba(13,34,64,0.2)";
+const N = "#0D2240";       // navy - primary text, buttons, headings
+const G = "#9B6E2E";       // gold - accents, labels
+const GL = "#C8922A";      // gold light - hover
+const W = "#F5F0E8";       // warm cream - background
+const S = "#EDE8DF";       // slightly darker cream - tile backgrounds, inputs
+const B = "rgba(13,34,64,0.12)";
+const BS = "rgba(13,34,64,0.25)";
 const T = "#0D2240";
-const M = "#5a6e85";
+const M = "#5C6E7E";       // muted blue-grey
 
 function ScoreBar({ label, score }) {
-  const color = score === 2 ? N : score === 1 ? GL : "#cc4444";
+  const color = score === 2 ? N : score === 1 ? G : "#cc4444";
   return (
     <div style={{ marginBottom: 14 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 5 }}>
@@ -643,7 +643,7 @@ export default function App() {
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   const hdr = (title, sub, showBack = true) => (
-    <div style={{ height: 52, borderBottom: `1px solid ${B}`, display: "flex", alignItems: "center", padding: "0 1.5rem", justifyContent: "space-between", flexShrink: 0 }}>
+    <div style={{ height: 52, borderBottom: `1px solid ${B}`, display: "flex", alignItems: "center", padding: "0 1.5rem", justifyContent: "space-between", flexShrink: 0, background: W }}>
       <div>
         <span style={{ fontSize: 12, fontWeight: 500, letterSpacing: "0.12em", textTransform: "uppercase" }}>
           <span style={{ color: G }}>INPERIUM</span> · PRACTICE SIMULATOR
@@ -655,45 +655,45 @@ export default function App() {
   );
 
   if (screen === "home") return (
-    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", display: "flex", flexDirection: "column" }}>
-      <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.15);border-radius:2px}`}</style>
+    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column", background: W }}>
+      <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.2);border-radius:2px}`}</style>
       {hdr(null, null, false)}
-      <div style={{ flex: 1, padding: "2rem 2rem 2rem 2rem" }}>
+      <div style={{ flex: 1, padding: "2.5rem 2.5rem 2rem" }}>
 
-        <div style={{ marginBottom: "1.75rem" }}>
-          <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 8, fontWeight: 500 }}>Practice Simulator</div>
-          <h1 style={{ fontSize: 20, fontWeight: 600, color: N, marginBottom: 6, lineHeight: 1.3 }}>What do you want to practice?</h1>
-          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, maxWidth: 500 }}>Choose a category below. End the session whenever you're ready to see your score and feedback.</p>
+        <div style={{ marginBottom: "2rem" }}>
+          <h1 style={{ fontSize: 28, fontWeight: 700, color: N, marginBottom: 6, lineHeight: 1.2, fontFamily: "Georgia,serif" }}>What do you want to practice?</h1>
+          <p style={{ fontSize: 15, color: G, lineHeight: 1.5, fontStyle: "italic", marginBottom: 8, fontFamily: "Georgia,serif" }}>Real conversations. Real feedback.</p>
+          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, maxWidth: 520, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
         </div>
 
-        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8 }}>Practice categories</div>
+        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Practice categories</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
-              style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", transition: "all 0.15s", background: W, display: "flex", alignItems: "flex-start", gap: 10 }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = GL; e.currentTarget.style.background = "rgba(200,146,42,0.03)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.background = W; }}>
-              <div style={{ width: 30, height: 30, borderRadius: 6, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15, marginTop: 1 }}>{cat.icon}</div>
+              style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", transition: "all 0.15s", background: "#ffffff", display: "flex", alignItems: "flex-start", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)"; }}>
+              <div style={{ width: 32, height: 32, borderRadius: 8, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, marginTop: 1 }}>{cat.icon}</div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 2 }}>{cat.title}</div>
-                <div style={{ fontSize: 12, color: M, lineHeight: 1.45 }}>{cat.desc}</div>
+                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 3, fontFamily: "Georgia,serif" }}>{cat.title}</div>
+                <div style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>{cat.desc}</div>
               </div>
             </div>
           ))}
         </div>
 
-        <div style={{ fontSize: 11, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 8, marginTop: 18 }}>Reference</div>
+        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, marginTop: 22, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Reference</div>
         <div onClick={() => setScreen("reference")}
-          style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 8, padding: "0.9rem 1rem", cursor: "pointer", background: W, transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12 }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.background = "rgba(13,34,64,0.02)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.background = W; }}>
-          <div style={{ width: 30, height: 30, borderRadius: 6, background: "rgba(13,34,64,0.06)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 15 }}>📖</div>
+          style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", background: "#ffffff", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.12)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)"; }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(13,34,64,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📖</div>
           <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 2 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: N }}>Field Guide reference</span>
-              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.07)", color: N, padding: "2px 7px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+              <span style={{ fontSize: 13, fontWeight: 600, color: N, fontFamily: "Georgia,serif" }}>Field Guide reference</span>
+              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.08)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
             </div>
-            <div style={{ fontSize: 12, color: M, lineHeight: 1.45 }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
+            <div style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
           </div>
           <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
         </div>
@@ -703,7 +703,7 @@ export default function App() {
   );
 
   if (screen === "picker") return (
-    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column" }}>
+    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column", background: W }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
       {hdr(null, category?.title)}
       <div style={{ flex: 1, padding: "2rem 1.5rem", maxWidth: 820, margin: "0 auto", width: "100%" }}>
@@ -713,9 +713,9 @@ export default function App() {
         <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
           {category?.scenarios.map(sc => (
             <div key={sc.id} onClick={() => pickScenario(category, sc)}
-              style={{ border: `0.5px solid ${B}`, borderRadius: 10, padding: "1.1rem 1.25rem", cursor: "pointer", transition: "border-color 0.15s" }}
-              onMouseEnter={e => e.currentTarget.style.borderColor = GL}
-              onMouseLeave={e => e.currentTarget.style.borderColor = B}>
+              style={{ border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 10, padding: "1.1rem 1.25rem", cursor: "pointer", transition: "all 0.15s", background: "#ffffff", boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
+              onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.12)"; }}
+              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.18)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)"; }}>
               <div style={{ fontSize: 14, fontWeight: 500, color: N, marginBottom: 4 }}>{sc.label}</div>
               <div style={{ fontSize: 12, color: M, lineHeight: 1.5, fontStyle: "italic" }}>"{sc.opener.substring(0, 100)}..."</div>
             </div>
@@ -743,7 +743,7 @@ export default function App() {
               {m.role === "user" ? "You" : scenario?.label}
             </div>
             <div style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
-              <div style={{ maxWidth: "78%", padding: "0.85rem 1rem", borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: m.role === "user" ? N : S, border: m.role === "user" ? "none" : `0.5px solid ${B}`, fontSize: 14, lineHeight: 1.7, color: m.role === "user" ? W : T, whiteSpace: "pre-wrap", fontStyle: m.role === "assistant" ? "italic" : "normal" }}>
+              <div style={{ maxWidth: "78%", padding: "0.85rem 1rem", borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: m.role === "user" ? N : "#ffffff", border: m.role === "user" ? "none" : `1px solid rgba(13,34,64,0.15)`, fontSize: 14, lineHeight: 1.7, color: m.role === "user" ? "#F5F0E8" : T, whiteSpace: "pre-wrap", fontStyle: m.role === "assistant" ? "italic" : "normal" }}>
                 {m.content}
               </div>
             </div>
