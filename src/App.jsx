@@ -660,10 +660,10 @@ export default function App() {
       {hdr(null, null, false)}
       <div style={{ flex: 1, padding: "2.5rem 2.5rem 2rem" }}>
 
-        <div style={{ marginBottom: "2rem" }}>
+        <div style={{ marginBottom: "2rem", textAlign: "center" }}>
           <h1 style={{ fontSize: 28, fontWeight: 700, color: N, marginBottom: 6, lineHeight: 1.2, fontFamily: "Georgia,serif" }}>What do you want to practice?</h1>
           <p style={{ fontSize: 15, color: G, lineHeight: 1.5, fontStyle: "italic", marginBottom: 8, fontFamily: "Georgia,serif" }}>Real conversations. Real feedback.</p>
-          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, maxWidth: 520, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
+          <p style={{ fontSize: 13, color: M, lineHeight: 1.6, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
         </div>
 
         <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Practice categories</div>
@@ -671,12 +671,26 @@ export default function App() {
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
               style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", transition: "all 0.15s", background: "#ffffff", display: "flex", alignItems: "flex-start", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
-              onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.12)"; }}
-              onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)"; }}>
-              <div style={{ width: 32, height: 32, borderRadius: 8, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, marginTop: 1 }}>{cat.icon}</div>
+              onMouseEnter={e => { 
+                e.currentTarget.style.background = N; 
+                e.currentTarget.style.borderColor = N;
+                e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.2)";
+                e.currentTarget.querySelectorAll("[data-title]").forEach(el => el.style.color = "#F5F0E8");
+                e.currentTarget.querySelectorAll("[data-desc]").forEach(el => el.style.color = "rgba(245,240,232,0.7)");
+                e.currentTarget.querySelectorAll("[data-icon]").forEach(el => el.style.background = "rgba(255,255,255,0.12)");
+              }}
+              onMouseLeave={e => { 
+                e.currentTarget.style.background = "#ffffff"; 
+                e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)";
+                e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)";
+                e.currentTarget.querySelectorAll("[data-title]").forEach(el => el.style.color = N);
+                e.currentTarget.querySelectorAll("[data-desc]").forEach(el => el.style.color = M);
+                e.currentTarget.querySelectorAll("[data-icon]").forEach(el => el.style.background = S);
+              }}>
+              <div data-icon style={{ width: 32, height: 32, borderRadius: 8, background: S, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16, marginTop: 1, transition: "background 0.15s" }}>{cat.icon}</div>
               <div>
-                <div style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 3, fontFamily: "Georgia,serif" }}>{cat.title}</div>
-                <div style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>{cat.desc}</div>
+                <div data-title style={{ fontSize: 13, fontWeight: 600, color: N, marginBottom: 3, fontFamily: "Georgia,serif", transition: "color 0.15s" }}>{cat.title}</div>
+                <div data-desc style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", transition: "color 0.15s" }}>{cat.desc}</div>
               </div>
             </div>
           ))}
@@ -685,17 +699,31 @@ export default function App() {
         <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, marginTop: 22, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Reference</div>
         <div onClick={() => setScreen("reference")}
           style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", background: "#ffffff", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
-          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.12)"; }}
-          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)"; e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)"; }}>
+          onMouseEnter={e => { 
+            e.currentTarget.style.background = N; 
+            e.currentTarget.style.borderColor = N;
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.2)";
+            e.currentTarget.querySelectorAll("[data-rtext]").forEach(el => el.style.color = "#F5F0E8");
+            e.currentTarget.querySelectorAll("[data-rdesc]").forEach(el => el.style.color = "rgba(245,240,232,0.7)");
+            e.currentTarget.querySelectorAll("[data-rarrow]").forEach(el => el.style.color = "#F5F0E8");
+          }}
+          onMouseLeave={e => { 
+            e.currentTarget.style.background = "#ffffff"; 
+            e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)";
+            e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)";
+            e.currentTarget.querySelectorAll("[data-rtext]").forEach(el => el.style.color = N);
+            e.currentTarget.querySelectorAll("[data-rdesc]").forEach(el => el.style.color = M);
+            e.currentTarget.querySelectorAll("[data-rarrow]").forEach(el => el.style.color = M);
+          }}>
           <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(13,34,64,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>📖</div>
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
-              <span style={{ fontSize: 13, fontWeight: 600, color: N, fontFamily: "Georgia,serif" }}>Field Guide reference</span>
+              <span data-rtext style={{ fontSize: 13, fontWeight: 600, color: N, fontFamily: "Georgia,serif", transition: "color 0.15s" }}>Field Guide reference</span>
               <span style={{ fontSize: 10, background: "rgba(13,34,64,0.08)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Quick lookup</span>
             </div>
-            <div style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
+            <div data-rdesc style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", transition: "color 0.15s" }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
           </div>
-          <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
+          <div data-rarrow style={{ color: M, fontSize: 14, flexShrink: 0, transition: "color 0.15s" }}>→</div>
         </div>
 
       </div>
