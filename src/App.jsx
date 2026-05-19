@@ -332,6 +332,17 @@ const REFERENCE_SYSTEM = FIELD_GUIDE + `
 === YOUR ROLE: REFERENCE ASSISTANT ===
 Answer questions about the Inperium Communications Field Guide accurately and concisely, always citing the relevant section. Give exact language from the guide when appropriate. Be direct and practical — staff are preparing for real conversations.`;
 
+const FLIPSCRIPT_SYSTEM = FIELD_GUIDE + `
+
+=== YOUR ROLE: INPERIUM EXPERT LEADER ===
+The user is playing the role of a skeptic, prospect, board member, donor, or other challenging counterpart. They will ask you hard questions, raise objections, or push back.
+
+You respond as a highly skilled, trained Inperium leader — calm, confident, and grounded in the Field Guide. Use the exact frameworks: lead with proof not explanation, follow the Credibility Stack sequence, use the right story for the situation, deploy the Stat-Then-Meaning rule, use the correct language from Words That Work.
+
+After your response, add a brief coaching note in italics on a new line starting with "Coach note:" — explain which specific framework or technique you used and why, so the user can learn from the model answer.
+
+Be realistic and human, not corporate. Speak the way a skilled leader would actually speak in a real conversation.`;
+
 const CATEGORIES = [
   {
     id: "conversation", icon: "💬",
@@ -629,8 +640,9 @@ export default function App() {
     setRefMessages(newMsgs);
     setRefInput("");
     setRefLoading(true);
+    const sys = screen === "flipscript" ? FLIPSCRIPT_SYSTEM : REFERENCE_SYSTEM;
     try {
-      const data = await callAPI(newMsgs.map(m => ({ role: m.role, content: m.content })), REFERENCE_SYSTEM);
+      const data = await callAPI(newMsgs.map(m => ({ role: m.role, content: m.content })), sys);
       const reply = data.content?.[0]?.text || "Sorry, no response.";
       setRefMessages(p => [...p, { role: "assistant", content: reply }]);
     } catch { setRefMessages(p => [...p, { role: "assistant", content: "Connection error." }]); }
@@ -666,7 +678,7 @@ export default function App() {
           <p style={{ fontSize: 14, color: M, lineHeight: 1.7, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
         </div>
 
-        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Practice categories</div>
+        <div style={{ fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", color: N, fontWeight: 600, marginBottom: 12, fontFamily: "Georgia,serif" }}>Practice categories</div>
         <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 8, marginBottom: 8 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
@@ -696,7 +708,7 @@ export default function App() {
           ))}
         </div>
 
-        <div style={{ fontSize: 10, letterSpacing: "0.14em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 10, marginTop: 22, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif" }}>Reference</div>
+        <div style={{ fontSize: 13, letterSpacing: "0.1em", textTransform: "uppercase", color: N, fontWeight: 600, marginBottom: 12, marginTop: 24, fontFamily: "Georgia,serif" }}>Reference & tools</div>
         <div onClick={() => setScreen("reference")}
           style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", background: "#ffffff", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
           onMouseEnter={e => { 
@@ -724,6 +736,35 @@ export default function App() {
             <div data-rdesc style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", transition: "color 0.15s" }}>Look up exact language, objection responses, stories, and the Credibility Stack.</div>
           </div>
           <div data-rarrow style={{ color: M, fontSize: 14, flexShrink: 0, transition: "color 0.15s" }}>→</div>
+        </div>
+
+        <div onClick={() => setScreen("flipscript")}
+          style={{ border: "1.5px solid rgba(13,34,64,0.2)", borderRadius: 10, padding: "1rem 1.1rem", cursor: "pointer", background: "#ffffff", transition: "all 0.15s", display: "flex", alignItems: "center", gap: 12, boxShadow: "0 1px 3px rgba(13,34,64,0.06)", marginTop: 8 }}
+          onMouseEnter={e => {
+            e.currentTarget.style.background = N;
+            e.currentTarget.style.borderColor = N;
+            e.currentTarget.style.boxShadow = "0 2px 8px rgba(13,34,64,0.2)";
+            e.currentTarget.querySelectorAll("[data-fstext]").forEach(el => el.style.color = "#F5F0E8");
+            e.currentTarget.querySelectorAll("[data-fsdesc]").forEach(el => el.style.color = "rgba(245,240,232,0.7)");
+            e.currentTarget.querySelectorAll("[data-fsarrow]").forEach(el => el.style.color = "#F5F0E8");
+          }}
+          onMouseLeave={e => {
+            e.currentTarget.style.background = "#ffffff";
+            e.currentTarget.style.borderColor = "rgba(13,34,64,0.2)";
+            e.currentTarget.style.boxShadow = "0 1px 3px rgba(13,34,64,0.06)";
+            e.currentTarget.querySelectorAll("[data-fstext]").forEach(el => el.style.color = N);
+            e.currentTarget.querySelectorAll("[data-fsdesc]").forEach(el => el.style.color = M);
+            e.currentTarget.querySelectorAll("[data-fsarrow]").forEach(el => el.style.color = M);
+          }}>
+          <div style={{ width: 32, height: 32, borderRadius: 8, background: "rgba(13,34,64,0.08)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 16 }}>🔄</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 7, marginBottom: 3 }}>
+              <span data-fstext style={{ fontSize: 13, fontWeight: 600, color: N, fontFamily: "Georgia,serif", transition: "color 0.15s" }}>Flip the Script</span>
+              <span style={{ fontSize: 10, background: "rgba(13,34,64,0.08)", color: N, padding: "2px 8px", borderRadius: 20, letterSpacing: "0.04em", fontWeight: 500 }}>Role reversal</span>
+            </div>
+            <div data-fsdesc style={{ fontSize: 12, color: M, lineHeight: 1.5, fontFamily: "-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif", transition: "color 0.15s" }}>You ask the hard question — the simulator shows you exactly how an expert would answer it, grounded in the Field Guide.</div>
+          </div>
+          <div data-fsarrow style={{ color: M, fontSize: 14, flexShrink: 0, transition: "color 0.15s" }}>→</div>
         </div>
 
       </div>
@@ -942,6 +983,86 @@ export default function App() {
         </div>
       </div>
       <style>{`@keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+    </div>
+  );
+
+  if (screen === "flipscript") return (
+    <div style={{ minHeight: "100vh", background: W, color: T, fontFamily: "Georgia,'Times New Roman',serif", display: "flex", flexDirection: "column" }}>
+      <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.2);border-radius:2px} @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+      {hdr(null, "Flip the Script")}
+      <div style={{ padding: "1rem 1.5rem 0.75rem", borderBottom: `1px solid ${B}`, flexShrink: 0 }}>
+        <div style={{ fontSize: 15, fontWeight: 600, color: N, marginBottom: 3 }}>Flip the Script</div>
+        <div style={{ fontSize: 12, color: M, lineHeight: 1.6 }}>You play the skeptic, prospect, or board member. Ask any hard question — the simulator responds as an expert Inperium leader, using the exact language and frameworks from the Field Guide.</div>
+      </div>
+      <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        {refMessages.length === 0 ? (
+          <div style={{ padding: "1.5rem", flex: 1 }}>
+            <div style={{ fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: G, marginBottom: 12, fontWeight: 500, fontFamily: "-apple-system,sans-serif" }}>Try one of these</div>
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginBottom: "1.5rem" }}>
+              {[
+                "This sounds like private equity. What's the catch?",
+                "We'll lose our independence if we do this.",
+                "My board will never give up control.",
+                "We're not in crisis — why would we do this now?",
+                "Our culture is unique. You can't standardize what we do.",
+                "Too good to be true. What am I actually giving up?",
+                "What happens to our CEO?",
+                "Our donors won't understand this.",
+                "We tried a merger before and it was a disaster.",
+                "This is just a way for you to extract value from us.",
+              ].map(q => (
+                <div key={q} onClick={() => sendRef(q)}
+                  style={{ background: "#ffffff", border: "1.5px solid rgba(13,34,64,0.18)", borderRadius: 20, padding: "7px 14px", fontSize: 12, color: N, cursor: "pointer", fontFamily: "-apple-system,sans-serif", transition: "all 0.15s", boxShadow: "0 1px 3px rgba(13,34,64,0.06)" }}
+                  onMouseEnter={e => { e.currentTarget.style.background = N; e.currentTarget.style.color = "#F5F0E8"; }}
+                  onMouseLeave={e => { e.currentTarget.style.background = "#ffffff"; e.currentTarget.style.color = N; }}>
+                  {q}
+                </div>
+              ))}
+            </div>
+            <div style={{ fontSize: 12, color: M, fontFamily: "-apple-system,sans-serif", lineHeight: 1.6, maxWidth: 500, padding: "1rem", background: "#ffffff", borderRadius: 8, border: `1px solid ${B}` }}>
+              <strong style={{ color: N }}>How it works:</strong> Type any question or objection a prospect, board member, or donor might raise. The simulator responds the way a trained Inperium leader would — using the Credibility Stack, the right story, and the exact language from the Field Guide. Use it to prepare for a specific meeting or to understand how a tough question should be handled.
+            </div>
+          </div>
+        ) : (
+          <div style={{ flex: 1, overflowY: "auto", padding: "1.5rem" }}>
+            {refMessages.map((m, i) => (
+              <div key={i} style={{ marginBottom: "1.5rem" }}>
+                <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: m.role === "user" ? G : M, marginBottom: 5, textAlign: m.role === "user" ? "right" : "left", fontFamily: "-apple-system,sans-serif" }}>
+                  {m.role === "user" ? "You (the skeptic)" : "Inperium leader"}
+                </div>
+                <div style={{ display: "flex", justifyContent: m.role === "user" ? "flex-end" : "flex-start" }}>
+                  <div style={{ maxWidth: "82%", padding: "0.85rem 1rem", borderRadius: m.role === "user" ? "12px 12px 2px 12px" : "12px 12px 12px 2px", background: m.role === "user" ? N : "#ffffff", border: m.role === "user" ? "none" : `1px solid rgba(13,34,64,0.15)`, fontSize: 14, lineHeight: 1.75, color: m.role === "user" ? "#F5F0E8" : T, whiteSpace: "pre-wrap" }}>
+                    {m.content}
+                  </div>
+                </div>
+              </div>
+            ))}
+            {refLoading && (
+              <div>
+                <div style={{ fontSize: 9, letterSpacing: "0.12em", textTransform: "uppercase", color: M, marginBottom: 5, fontFamily: "-apple-system,sans-serif" }}>Inperium leader</div>
+                <div style={{ display: "flex" }}>
+                  <div style={{ padding: "0.85rem 1rem", borderRadius: "12px 12px 12px 2px", background: "#ffffff", border: `1px solid rgba(13,34,64,0.15)` }}>
+                    {[0, 0.2, 0.4].map((d, i) => <span key={i} style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: M, animation: "pulse 1.2s ease-in-out infinite", margin: "0 2px", animationDelay: d + "s" }} />)}
+                  </div>
+                </div>
+              </div>
+            )}
+            <div ref={refEndRef} />
+          </div>
+        )}
+        <div style={{ borderTop: `1px solid ${B}`, padding: "0.9rem 1.5rem 1.25rem", flexShrink: 0 }}>
+          <div style={{ display: "flex", gap: 8, alignItems: "flex-end" }}>
+            <input value={refInput} onChange={e => setRefInput(e.target.value)} onKeyDown={onRefKey}
+              style={{ flex: 1, background: "#ffffff", border: `1px solid ${BS}`, borderRadius: 8, color: T, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia,serif", outline: "none", height: 44 }}
+              placeholder="Ask the hardest question you can think of..." />
+            <button onClick={() => sendRef()} disabled={refLoading || !refInput.trim()}
+              style={{ background: N, border: "none", color: "#F5F0E8", padding: "10px 18px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, height: 44, opacity: refLoading || !refInput.trim() ? 0.4 : 1, flexShrink: 0, fontFamily: "Georgia,serif" }}>Ask</button>
+          </div>
+          {refMessages.length > 0 && (
+            <button onClick={() => setRefMessages([])} style={{ marginTop: 8, fontSize: 11, color: M, background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", fontFamily: "-apple-system,sans-serif" }}>Start over</button>
+          )}
+        </div>
+      </div>
     </div>
   );
 
