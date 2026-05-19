@@ -177,7 +177,7 @@ Addressing Staff Anxiety:
 - The most powerful voice in a staff meeting is not the CEO. It is a peer from another affiliate.
 
 Responding to the Skeptic:
-- LEAD WITH: What the skeptic already trusts (IRS for PE background, deal terms for attorneys, peer references for burned community partners).
+- LEAD WITH: If the skeptic has a financial or legal background, skip the basics. Go straight to the structure. Show them the IRS classification. Speak to their level or lose the room.
 - You do not overcome skepticism by being more persuasive. You overcome it by being more transparent.
 - Convert the skeptic and they become your most credible advocate.
 
