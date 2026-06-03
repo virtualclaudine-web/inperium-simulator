@@ -1,4 +1,5 @@
 import { useState, useRef, useEffect } from "react";
+import { useContent } from "./useContent";
 
 const FIELD_GUIDE = `You are an AI-powered practice simulator built on the Inperium Communications Field Guide and Communications Toolkit. You have deep expertise in all of Inperium's messaging, frameworks, language, stories, and communication strategy.
 
@@ -544,11 +545,13 @@ function ScoreBar({ label, score }) {
 }
 
 export default function App() {
+  const content = useContent();
   const [screen, setScreen] = useState("home");
   const [category, setCategory] = useState(null);
   const [scenario, setScenario] = useState(null);
   const [messages, setMessages] = useState([]);
   const [input, setInput] = useState("");
+  const [flaggedWords, setFlaggedWords] = useState([]);
   const [loading, setLoading] = useState(false);
   const [exchanges, setExchanges] = useState(0);
   const [debrief, setDebrief] = useState(null);
@@ -572,6 +575,74 @@ export default function App() {
       return () => clearInterval(t);
     }
   }, [screen, startTime]);
+
+  const LIVE_FIELD_GUIDE = content.systemPrompt || FIELD_GUIDE;
+
+  const LIVE_PRACTICE_SYSTEM = LIVE_FIELD_GUIDE + `
+
+=== YOUR ROLE: PRACTICE SIMULATOR ===
+You are playing a realistic conversation partner. Stay in character throughout the conversation — be authentic, push back naturally, respond as that person would.
+
+IMPORTANT: Do NOT include any scoring or feedback during the conversation. Just respond naturally as the character. The user will request feedback when they are ready to end the session.
+
+When the user sends the message "END_SESSION_GET_FEEDBACK", step out of character completely and provide a structured session debrief in this EXACT format:
+
+---DEBRIEF---
+SCORE:[total out of 8]
+ASPIRATION_CLARITY:[0-2]
+CONSTRAINT_DISCOVERY:[0-2]
+DECISION_FRAMING:[0-2]
+SIMPLICITY_CONFIDENCE:[0-2]
+STRONGEST:[name of strongest dimension]
+COACH_NOTE:[2-3 sentences of specific, actionable coaching tied to the Field Guide]
+FOCUS:[one specific thing to work on next time, one sentence]
+---END_DEBRIEF---
+
+Scoring guide:
+- ASPIRATION_CLARITY (0-2): Did they lead with what the listener cares about, not what Inperium does? 2=excellent, 1=partial, 0=missing
+- CONSTRAINT_DISCOVERY (0-2): Did they acknowledge the fear/concern before answering it? 2=excellent, 1=partial, 0=missing
+- DECISION_FRAMING (0-2): Did they use proof-first sequencing (legal/market/peer before explanation)? 2=excellent, 1=partial, 0=missing
+- SIMPLICITY_CONFIDENCE (0-2): Clean, human, jargon-free, confident language? 2=excellent, 1=partial, 0=missing`;
+
+  const LIVE_REFERENCE_SYSTEM = LIVE_FIELD_GUIDE + `
+
+=== YOUR ROLE: REFERENCE ASSISTANT ===
+Answer questions about the Inperium Communications Field Guide accurately and concisely, always citing the relevant section. Give exact language from the guide when appropriate. Be direct and practical — staff are preparing for real conversations.`;
+
+  const LIVE_FLIPSCRIPT_SYSTEM = LIVE_FIELD_GUIDE + `
+
+=== YOUR ROLE: INPERIUM EXPERT LEADER ===
+The user is playing the role of a skeptic, prospect, board member, donor, or other challenging counterpart. They will ask you hard questions, raise objections, or push back.
+
+You respond as a highly skilled, trained Inperium leader — calm, confident, and grounded in the Field Guide. Use the exact frameworks: lead with proof not explanation, follow the Credibility Stack sequence, use the right story for the situation, deploy the Stat-Then-Meaning rule, use the correct language from Words That Work.
+
+After your response, add a brief coaching note in italics on a new line starting with "Coach note:" — explain which specific framework or technique you used and why, so the user can learn from the model answer.
+
+Be realistic and human, not corporate. Speak the way a skilled leader would actually speak in a real conversation.`;
+
+  // Loading screen
+  if (content.loading) return (
+    <div style={{ minHeight: "100vh", background: W, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", fontFamily: "Georgia,'Times New Roman',serif" }}>
+      <style>{`* { box-sizing:border-box; margin:0; padding:0; } @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+      <div style={{ marginBottom: 20, fontSize: 22, color: N, fontWeight: 500 }}>Loading content...</div>
+      <div style={{ display: "flex", gap: 6 }}>
+        {[0, 0.2, 0.4].map((d, i) => <span key={i} style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: G, animation: "pulse 1.2s ease-in-out infinite", animationDelay: d + "s" }} />)}
+      </div>
+      <div style={{ marginTop: 16, fontSize: 12, color: M }}>Fetching from Google Sheets...</div>
+    </div>
+  );
+
+  // Error screen — fall back to hardcoded content gracefully
+  if (content.error) console.warn("Using fallback content. Sheets error:", content.error);
+
+  // Real-time language flag checker using live sheet data
+  const checkLanguage = (text) => {
+    if (!content.languageGuide) return [];
+    const lower = text.toLowerCase();
+    return content.languageGuide.prohibited.filter(({ word }) =>
+      lower.includes(word.toLowerCase())
+    );
+  };
 
   const callAPI = async (msgs, sys) => {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
@@ -606,7 +677,7 @@ export default function App() {
     setMessages(newMsgs);
     setInput("");
     setLoading(true);
-    const sys = PRACTICE_SYSTEM + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
+    const sys = LIVE_PRACTICE_SYSTEM + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
     try {
       const data = await callAPI(newMsgs.map(m => ({ role: m.role, content: m.content })), sys);
       const raw = data.content?.[0]?.text || "Sorry, no response.";
@@ -621,7 +692,7 @@ export default function App() {
     setLoading(true);
     const endMsg = { role: "user", content: "END_SESSION_GET_FEEDBACK" };
     const allMsgs = [...messages, endMsg];
-    const sys = PRACTICE_SYSTEM + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
+    const sys = LIVE_PRACTICE_SYSTEM + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
     try {
       const data = await callAPI(allMsgs.map(m => ({ role: m.role, content: m.content })), sys);
       const raw = data.content?.[0]?.text || "";
@@ -640,7 +711,7 @@ export default function App() {
     setRefMessages(newMsgs);
     setRefInput("");
     setRefLoading(true);
-    const sys = screen === "flipscript" ? FLIPSCRIPT_SYSTEM : REFERENCE_SYSTEM;
+    const sys = screen === "flipscript" ? LIVE_FLIPSCRIPT_SYSTEM : LIVE_REFERENCE_SYSTEM;
     try {
       const data = await callAPI(newMsgs.map(m => ({ role: m.role, content: m.content })), sys);
       const reply = data.content?.[0]?.text || "Sorry, no response.";
@@ -662,7 +733,14 @@ export default function App() {
         </span>
         {sub && <span style={{ fontSize: 12, color: M, marginLeft: 10 }}>› {sub}</span>}
       </div>
-      {showBack && <button onClick={goHome} style={{ fontSize: 12, color: M, background: "transparent", border: `0.5px solid ${BS}`, padding: "4px 12px", borderRadius: 6, cursor: "pointer" }}>← Back</button>}
+      <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
+        {content.lastFetched && (
+          <span style={{ fontSize: 10, color: M, letterSpacing: "0.04em" }}>
+            Content updated {content.lastFetched.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+          </span>
+        )}
+        {showBack && <button onClick={goHome} style={{ fontSize: 12, color: M, background: "transparent", border: `0.5px solid ${BS}`, padding: "4px 12px", borderRadius: 6, cursor: "pointer" }}>← Back</button>}
+      </div>
     </div>
   );
 
@@ -831,9 +909,19 @@ export default function App() {
         <div ref={endRef} />
       </div>
       <div style={{ borderTop: `1px solid ${B}`, padding: "0.9rem 1.5rem 1.25rem", flexShrink: 0 }}>
+        {flaggedWords.length > 0 && (
+          <div style={{ marginBottom: 8, padding: "7px 12px", background: "#FEF3C7", borderRadius: 6, border: "1px solid #F59E0B", display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center" }}>
+            <span style={{ fontSize: 11, fontWeight: 600, color: "#92400E", marginRight: 2 }}>⚠ Language flag:</span>
+            {flaggedWords.map(({ word, substitute }) => (
+              <span key={word} style={{ fontSize: 11, color: "#92400E", background: "#FDE68A", padding: "2px 8px", borderRadius: 10 }}>
+                "{word}" → try "{substitute}"
+              </span>
+            ))}
+          </div>
+        )}
         <div style={{ display: "flex", gap: 8, alignItems: "flex-end", marginBottom: 10 }}>
-          <textarea ref={taRef} value={input} onChange={e => setInput(e.target.value)} onKeyDown={onKey}
-            style={{ flex: 1, background: S, border: `0.5px solid ${BS}`, borderRadius: 8, color: T, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia,serif", resize: "none", lineHeight: 1.6, outline: "none", minHeight: 44 }}
+          <textarea ref={taRef} value={input} onChange={e => { setInput(e.target.value); setFlaggedWords(checkLanguage(e.target.value)); }} onKeyDown={onKey}
+            style={{ flex: 1, background: S, border: flaggedWords.length > 0 ? "1px solid #F59E0B" : `0.5px solid ${BS}`, borderRadius: 8, color: T, padding: "10px 14px", fontSize: 14, fontFamily: "Georgia,serif", resize: "none", lineHeight: 1.6, outline: "none", minHeight: 44 }}
             placeholder={`Respond to ${scenario?.label}...`} rows={1} />
           <button onClick={send} disabled={loading || !input.trim()}
             style={{ background: N, border: "none", color: W, padding: "10px 18px", borderRadius: 8, cursor: "pointer", fontSize: 13, fontWeight: 500, height: 44, opacity: loading || !input.trim() ? 0.4 : 1, flexShrink: 0 }}>Send</button>
