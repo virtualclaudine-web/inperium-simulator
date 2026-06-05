@@ -643,14 +643,14 @@ After your response, add a brief coaching note in italics starting with "Coach n
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
             <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setStartTime(Date.now()); setElapsed(0); setFlaggedWords([]); }}
               style={{ fontFamily: SF, fontSize: 11, color: M, background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", padding: 0 }}>Restart</button>
-            {exchanges >= 2 ? (
+            {exchanges >= 1 ? (
               <button onClick={endSession} disabled={loading}
                 style={{ background: BR, border: "none", color: W, padding: "9px 20px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500, opacity: loading ? 0.5 : 1, transition: "all 0.2s" }}>
                 End conversation & get feedback →
               </button>
             ) : (
               <span style={{ fontFamily: SF, fontSize: 11, color: M, background: CS, padding: "9px 16px", borderRadius: 8 }}>
-                {2 - exchanges} more {2 - exchanges === 1 ? "exchange" : "exchanges"} to unlock feedback
+                Send a reply to unlock feedback
               </span>
             )}
           </div>
