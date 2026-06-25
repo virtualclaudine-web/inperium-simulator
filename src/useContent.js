@@ -1,110 +1,138 @@
 import { useState, useEffect } from "react";
 
-const SHEET_ID = "1OHCHgD-c47OxcF6eSnvP6y0mauy5qFhz83aR-iuqeqU";
-const API_KEY = import.meta.env.VITE_GOOGLE_SHEETS_API_KEY;
+const TENANT_ID = import.meta.env.VITE_SP_TENANT_ID;
+const CLIENT_ID = import.meta.env.VITE_SP_CLIENT_ID;
+const CLIENT_SECRET = import.meta.env.VITE_SP_CLIENT_SECRET;
+const SITE_HOST = "inperiumservicesinc.sharepoint.com";
+const SITE_PATH = "/sites/ApisVercel";
 
-const RANGES = [
-  "Field Guide Reference!A4:F100",
-  "Language Guide!A4:E100",
-  "Stories!A4:G100",
-  "Objections!A4:G100",
-  "Scenarios!A4:J100",
-];
+const LIST_NAMES = {
+  fieldGuide: "Field Guide Reference",
+  language: "Language Guide",
+  stories: "Stories",
+  objections: "Objections",
+  scenarios: "Scenarios",
+};
 
-async function fetchRange(range) {
-  const url = `https://sheets.googleapis.com/v4/spreadsheets/${SHEET_ID}/values/${encodeURIComponent(range)}?key=${API_KEY}`;
-  const res = await fetch(url);
-  if (!res.ok) throw new Error(`Sheets fetch failed: ${res.status}`);
+async function getToken() {
+  const res = await fetch(
+    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
+    {
+      method: "POST",
+      headers: { "Content-Type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "client_credentials",
+        client_id: CLIENT_ID,
+        client_secret: CLIENT_SECRET,
+        scope: "https://graph.microsoft.com/.default",
+      }),
+    }
+  );
   const data = await res.json();
-  return data.values || [];
+  if (!data.access_token) throw new Error("Token fetch failed: " + JSON.stringify(data));
+  return data.access_token;
+}
+
+async function getSiteId(token) {
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/sites/${SITE_HOST}:${SITE_PATH}`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json();
+  if (!data.id) throw new Error("Site ID fetch failed: " + JSON.stringify(data));
+  return data.id;
+}
+
+async function getListItems(token, siteId, listName) {
+  const encoded = encodeURIComponent(listName);
+  const res = await fetch(
+    `https://graph.microsoft.com/v1.0/sites/${siteId}/lists/${encoded}/items?expand=fields&$top=500`,
+    { headers: { Authorization: `Bearer ${token}` } }
+  );
+  const data = await res.json();
+  if (!data.value) throw new Error(`List fetch failed for "${listName}": ` + JSON.stringify(data));
+  return data.value.map(i => i.fields);
 }
 
 function buildFieldGuide(rows) {
-  // Each row: [Section#, Title, Full Content, Chapter Reference, Status, Last Reviewed]
-  const active = rows.filter(r => r[4] === "Active");
+  const active = rows.filter(r => r.Status === "Active");
   let guide = `=== INPERIUM COMMUNICATIONS FIELD GUIDE & TOOLKIT ===\n\n`;
   active.forEach(r => {
-    guide += `SECTION ${r[0]} — ${r[1]}\n${r[2]}\n\n`;
+    const num = r["Section #"] || r.Section_x0020__x23_ || "";
+    const title = r["Section Title"] || r.Section_x0020_Title || r.Title || "";
+    const content = r["Full Content"] || r.Full_x0020_Content || "";
+    guide += `SECTION ${num} — ${title}\n${content}\n\n`;
   });
   return guide;
 }
 
 function buildLanguageGuide(rows) {
-  // Each row: [Stop Saying, Start Saying, Context Notes, Triggers Flag, Status]
-  const active = rows.filter(r => r[4] === "Active");
-  const prohibited = active.filter(r => r[3] === "TRUE").map(r => ({
-    word: r[0],
-    substitute: r[1],
-    note: r[2],
+  const active = rows.filter(r => r.Status === "Active");
+  const isProhibited = (r) => {
+    const val = r["Triggers Flag (Real-Time)"] || r.Triggers_x0020_Flag || r.TriggersFlag;
+    return val === true || val === "TRUE" || val === "true";
+  };
+  const prohibited = active.filter(isProhibited).map(r => ({
+    word: r["Stop Saying"] || r.Stop_x0020_Saying || r.Title || "",
+    substitute: r["Start Saying"] || r.Start_x0020_Saying || "",
+    note: r["Context Notes"] || r.Context_x0020_Notes || "",
   }));
-  const contextual = active.filter(r => r[3] === "FALSE").map(r => ({
-    word: r[0],
-    substitute: r[1],
-    note: r[2],
+  const contextual = active.filter(r => !isProhibited(r)).map(r => ({
+    word: r["Stop Saying"] || r.Stop_x0020_Saying || r.Title || "",
+    substitute: r["Start Saying"] || r.Start_x0020_Saying || "",
+    note: r["Context Notes"] || r.Context_x0020_Notes || "",
   }));
   return { prohibited, contextual };
 }
 
 function buildStories(rows) {
-  // Each row: [ID, Story Name, When To Use, Required Elements, 60-Second Version, Punchline, Status]
-  return rows
-    .filter(r => r[6] === "Active")
-    .map(r => ({
-      id: r[0],
-      name: r[1],
-      whenToUse: r[2],
-      requiredElements: r[3],
-      summary: r[4],
-      punchline: r[5],
-    }));
+  return rows.filter(r => r.Status === "Active").map(r => ({
+    id: r.ID || "",
+    name: r["Story Name"] || r.Title || "",
+    whenToUse: r["When To Use"] || r.When_x0020_To_x0020_Use || "",
+    requiredElements: r["Required Elements (must hit all)"] || r.Required_x0020_Elements || "",
+    summary: r["60-Second Version"] || r._x0036_0_x002d_Second_x0020_Ve || "",
+    punchline: r["Punchline / What It Teaches"] || r.Punchline || "",
+  }));
 }
 
 function buildObjections(rows) {
-  // Each row: [#, Objection, Fear Category, 30-Second, 2-Minute, What NOT To Say, Status]
-  return rows
-    .filter(r => r[6] === "Active")
-    .map(r => ({
-      num: r[0],
-      objection: r[1],
-      fear: r[2],
-      short: r[3],
-      full: r[4],
-      avoid: r[5],
-    }));
+  return rows.filter(r => r.Status === "Active").map(r => ({
+    num: r["#"] || r.Title || "",
+    objection: r["The Objection"] || r.Title || "",
+    fear: r["Fear Category"] || r.Fear_x0020_Category || "",
+    short: r["30-Second Response"] || "",
+    full: r["2-Minute Response"] || "",
+    avoid: r["What NOT To Say"] || "",
+  }));
 }
 
 function buildScenarios(rows) {
-  // Each row: [ID, Title, Scenario Text, Prospect Character, Difficulty, Chapter Reference, Framework Tags, Status, Last Reviewed, Toolkit Version]
-  return rows
-    .filter(r => r[7] === "Active")
-    .map(r => ({
-      id: r[0],
-      title: r[1],
-      text: r[2],
-      character: r[3],
-      difficulty: r[4],
-      chapter: r[5],
-      tags: r[6],
-    }));
+  return rows.filter(r => r.Status === "Active").map(r => ({
+    id: r.ID || "",
+    title: r.Title || "",
+    text: r["Scenario Text"] || r.Scenario_x0020_Text || "",
+    character: r["Prospect Character"] || r.Prospect_x0020_Character || "",
+    difficulty: r.Difficulty || "",
+    chapter: r["Chapter Reference"] || r.Chapter_x0020_Reference || "",
+    tags: r["Framework Tags"] || r.Framework_x0020_Tags || "",
+  }));
 }
 
 function buildSystemPrompt(fieldGuide, stories, objections) {
   let prompt = fieldGuide;
-
   if (stories.length) {
     prompt += `\n\n=== STORY LIBRARY (${stories.length} stories) ===\n`;
     stories.forEach(s => {
       prompt += `\n${s.name}\nWhen to use: ${s.whenToUse}\nRequired elements: ${s.requiredElements}\n60-second version: ${s.summary}\nPunchline: ${s.punchline}\n`;
     });
   }
-
   if (objections.length) {
     prompt += `\n\n=== OBJECTION BANK (${objections.length} objections) ===\n`;
     objections.forEach(o => {
       prompt += `\n${o.num}. "${o.objection}" [${o.fear}]\n30-second: ${o.short}\nFull: ${o.full}\nDo NOT say: ${o.avoid}\n`;
     });
   }
-
   return prompt;
 }
 
@@ -124,37 +152,33 @@ export function useContent() {
   useEffect(() => {
     async function load() {
       try {
-        const [fgRows, lgRows, stRows, obRows, scRows] = await Promise.all(
-          RANGES.map(fetchRange)
-        );
-
+        const token = await getToken();
+        const siteId = await getSiteId(token);
+        const [fgRows, lgRows, stRows, obRows, scRows] = await Promise.all([
+          getListItems(token, siteId, LIST_NAMES.fieldGuide),
+          getListItems(token, siteId, LIST_NAMES.language),
+          getListItems(token, siteId, LIST_NAMES.stories),
+          getListItems(token, siteId, LIST_NAMES.objections),
+          getListItems(token, siteId, LIST_NAMES.scenarios),
+        ]);
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
         const stories = buildStories(stRows);
         const objections = buildObjections(obRows);
         const scenarios = buildScenarios(scRows);
         const systemPrompt = buildSystemPrompt(fieldGuideText, stories, objections);
-
         setState({
-          loading: false,
-          error: null,
-          fieldGuideText,
-          languageGuide,
-          stories,
-          objections,
-          scenarios,
-          systemPrompt,
+          loading: false, error: null,
+          fieldGuideText, languageGuide, stories, objections, scenarios, systemPrompt,
           lastFetched: new Date(),
         });
       } catch (err) {
-        console.error("Content fetch failed:", err);
+        console.error("SharePoint content fetch failed:", err);
         setState(prev => ({ ...prev, loading: false, error: err.message }));
       }
     }
-
     load();
   }, []);
 
   return state;
 }
-
