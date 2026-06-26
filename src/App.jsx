@@ -412,7 +412,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
       <div style={{ display: "flex", gap: 6 }}>
         {[0, 0.2, 0.4].map((d, i) => <span key={i} style={{ display: "inline-block", width: 8, height: 8, borderRadius: "50%", background: BR, animation: "pulse 1.2s ease-in-out infinite", animationDelay: d + "s" }} />)}
       </div>
-      <div style={{ marginTop: 14, fontFamily: SF, fontSize: 12, color: M }}>Fetching from Google Sheets...</div>
+      <div style={{ marginTop: 14, fontFamily: SF, fontSize: 12, color: M }}>Loading content from SharePoint...</div>
     </div>
   );
 
