@@ -1,8 +1,5 @@
 import { useState, useEffect } from "react";
 
-const TENANT_ID = import.meta.env.VITE_SP_TENANT_ID;
-const CLIENT_ID = import.meta.env.VITE_SP_CLIENT_ID;
-const CLIENT_SECRET = import.meta.env.VITE_SP_CLIENT_SECRET;
 const SITE_HOST = "inperiumservicesinc.sharepoint.com";
 const SITE_PATH = "/sites/ApisVercel";
 
@@ -15,19 +12,7 @@ const LIST_NAMES = {
 };
 
 async function getToken() {
-  const res = await fetch(
-    `https://login.microsoftonline.com/${TENANT_ID}/oauth2/v2.0/token`,
-    {
-      method: "POST",
-      headers: { "Content-Type": "application/x-www-form-urlencoded" },
-      body: new URLSearchParams({
-        grant_type: "client_credentials",
-        client_id: CLIENT_ID,
-        client_secret: CLIENT_SECRET,
-        scope: "https://graph.microsoft.com/.default",
-      }),
-    }
-  );
+  const res = await fetch("/api/sharepoint-token", { method: "POST" });
   const data = await res.json();
   if (!data.access_token) throw new Error("Token fetch failed: " + JSON.stringify(data));
   return data.access_token;
