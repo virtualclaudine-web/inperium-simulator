@@ -165,7 +165,9 @@ export function useContent() {
         if (tkRows.length > 0) {
           console.log("Toolkit fields:", Object.keys(tkRows[0]));
           console.log("Toolkit first row:", tkRows[0]);
-          console.log("Toolkit active rows:", tkRows.filter(r => r.field_5 === "Active").length, "of", tkRows.length);
+          console.log("Toolkit active rows:", tkRows.filter(r => r.field_4 === "Active").length, "of", tkRows.length);
+          console.log("field_4 sample values:", tkRows.slice(0,5).map(r => r.field_4));
+          console.log("field_5 sample values:", tkRows.slice(0,5).map(r => r.field_5));
         }
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
