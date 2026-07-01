@@ -41,81 +41,79 @@ async function getListItems(token, siteId, listName) {
 }
 
 function buildToolkit(rows) {
-  // Filter out header rows (the title/subtitle rows at top of imported CSV)
-  const active = rows.filter(r => r.field_5 === "Active" || r.Status === "Active");
+  const active = rows.filter(r => r.field_4 === "Active" || r.Status === "Active");
   let text = `=== INPERIUM COMMUNICATIONS TOOLKIT v5 ===\n\n`;
   active.forEach(r => {
-    const title = r.field_2 || r["Section Title"] || r.Title || "";
-    const part = r.field_3 || r["Part / Category"] || "";
-    const content = r.field_4 || r["Full Content"] || r.Full_x0020_Content || "";
+    const title = r.field_1 || r["Section Title"] || "";
+    const part = r.field_2 || r["Part / Category"] || "";
+    const content = r.field_3 || r["Full Content"] || "";
     text += `--- ${part} | ${title} ---\n${content}\n\n`;
   });
   return text;
 }
 
 function buildFieldGuide(rows) {
-  // Filter out header rows
-  const active = rows.filter(r => r.field_5 === "Active" || r.Status === "Active");
+  const active = rows.filter(r => r.field_4 === "Active" || r.Status === "Active");
   let guide = `=== FIELD GUIDE QUICK REFERENCE ===\n\n`;
   active.forEach(r => {
-    const num = r.field_1 || r["Section #"] || r.Section_x0020__x23_ || "";
-    const title = r.field_2 || r["Section Title"] || r.Section_x0020_Title || r.Title || "";
-    const content = r.field_3 || r["Full Content"] || r.Full_x0020_Content || "";
+    const num = r.Title || "";
+    const title = r.field_1 || r["Section Title"] || "";
+    const content = r.field_2 || r["Full Content"] || "";
     guide += `SECTION ${num} — ${title}\n${content}\n\n`;
   });
   return guide;
 }
 
 function buildLanguageGuide(rows) {
-  const active = rows.filter(r => (r.field_5 === "Active" || r.Status === "Active") && (r.field_1 || r["Stop Saying"]));
+  const active = rows.filter(r => (r.field_4 === "Active" || r.Status === "Active") && r.Title);
   const isProhibited = (r) => {
-    const val = r.field_4 || r["Triggers Flag (Real-Time)"] || r.Triggers_x0020_Flag || r.TriggersFlag;
+    const val = r.field_3 || r["Triggers Flag (Real-Time)"] || r.TriggersFlag;
     return val === true || val === "TRUE" || val === "true";
   };
   const prohibited = active.filter(isProhibited).map(r => ({
-    word: r.field_1 || r["Stop Saying"] || r.Stop_x0020_Saying || r.Title || "",
-    substitute: r.field_2 || r["Start Saying"] || r.Start_x0020_Saying || "",
-    note: r.field_3 || r["Context Notes"] || r.Context_x0020_Notes || "",
+    word: r.Title || "",
+    substitute: r.field_1 || r["Start Saying"] || "",
+    note: r.field_2 || r["Context Notes"] || "",
   }));
   const contextual = active.filter(r => !isProhibited(r)).map(r => ({
-    word: r.field_1 || r["Stop Saying"] || r.Stop_x0020_Saying || r.Title || "",
-    substitute: r.field_2 || r["Start Saying"] || r.Start_x0020_Saying || "",
-    note: r.field_3 || r["Context Notes"] || r.Context_x0020_Notes || "",
+    word: r.Title || "",
+    substitute: r.field_1 || r["Start Saying"] || "",
+    note: r.field_2 || r["Context Notes"] || "",
   }));
   return { prohibited, contextual };
 }
 
 function buildStories(rows) {
-  return rows.filter(r => (r.field_7 === "Active" || r.Status === "Active") && (r.field_2 || r["Story Name"])).map(r => ({
-    id: r.field_1 || r.ID || "",
-    name: r.field_2 || r["Story Name"] || r.Title || "",
-    whenToUse: r.field_3 || r["When To Use"] || r.When_x0020_To_x0020_Use || "",
-    requiredElements: r.field_4 || r["Required Elements (must hit all)"] || r.Required_x0020_Elements || "",
-    summary: r.field_5 || r["60-Second Version"] || r._x0036_0_x002d_Second_x0020_Ve || "",
-    punchline: r.field_6 || r["Punchline / What It Teaches"] || r.Punchline || "",
+  return rows.filter(r => (r.field_6 === "Active" || r.Status === "Active") && r.Title).map(r => ({
+    id: r.Title || "",
+    name: r.field_1 || r["Story Name"] || "",
+    whenToUse: r.field_2 || r["When To Use"] || "",
+    requiredElements: r.field_3 || r["Required Elements (must hit all)"] || "",
+    summary: r.field_4 || r["60-Second Version"] || "",
+    punchline: r.field_5 || r["Punchline / What It Teaches"] || "",
   }));
 }
 
 function buildObjections(rows) {
-  return rows.filter(r => (r.field_7 === "Active" || r.Status === "Active") && (r.field_2 || r["The Objection"])).map(r => ({
-    num: r.field_1 || r["#"] || r.Title || "",
-    objection: r.field_2 || r["The Objection"] || r.Title || "",
-    fear: r.field_3 || r["Fear Category"] || r.Fear_x0020_Category || "",
-    short: r.field_4 || r["30-Second Response"] || "",
-    full: r.field_5 || r["2-Minute Response"] || "",
-    avoid: r.field_6 || r["What NOT To Say"] || "",
+  return rows.filter(r => (r.field_6 === "Active" || r.Status === "Active") && r.Title).map(r => ({
+    num: r.Title || "",
+    objection: r.field_1 || r["The Objection"] || "",
+    fear: r.field_2 || r["Fear Category"] || "",
+    short: r.field_3 || r["30-Second Response"] || "",
+    full: r.field_4 || r["2-Minute Response"] || "",
+    avoid: r.field_5 || r["What NOT To Say"] || "",
   }));
 }
 
 function buildScenarios(rows) {
-  return rows.filter(r => (r.field_8 === "Active" || r.Status === "Active") && (r.field_2 || r["Scenario Text"])).map(r => ({
-    id: r.field_1 || r.ID || "",
-    title: r.field_2 || r.Title || "",
-    text: r.field_3 || r["Scenario Text"] || r.Scenario_x0020_Text || "",
-    character: r.field_4 || r["Prospect Character"] || r.Prospect_x0020_Character || "",
-    difficulty: r.field_5 || r.Difficulty || "",
-    chapter: r.field_6 || r["Chapter Reference"] || r.Chapter_x0020_Reference || "",
-    tags: r.field_7 || r["Framework Tags"] || r.Framework_x0020_Tags || "",
+  return rows.filter(r => (r.field_7 === "Active" || r.Status === "Active") && r.Title).map(r => ({
+    id: r.Title || "",
+    title: r.field_1 || r.Title || "",
+    text: r.field_2 || r["Scenario Text"] || "",
+    character: r.field_3 || r["Prospect Character"] || "",
+    difficulty: r.field_4 || r.Difficulty || "",
+    chapter: r.field_5 || r["Chapter Reference"] || "",
+    tags: r.field_6 || r["Framework Tags"] || "",
   }));
 }
 
