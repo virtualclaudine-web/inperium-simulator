@@ -44,9 +44,9 @@ function buildToolkit(rows) {
   const active = rows.filter(r => r.Status === "Active");
   let text = `=== INPERIUM COMMUNICATIONS TOOLKIT v5 ===\n\n`;
   active.forEach(r => {
-    const num = r["Section #"] || r.Title || "";
-    const title = r["Section Title"] || r.Title || "";
-    const part = r["Part / Category"] || "";
+    const num = r["Section #"] || r.Section_x0020__x0023_ || r.Section_x0020__x23_ || r.Title || "";
+    const title = r["Section Title"] || r.Section_x0020_Title || r.Title || "";
+    const part = r["Part / Category"] || r.Part_x0020__x002F__x0020_Category || r.Part_x0020_x002F_x0020_Category || "";
     const content = r["Full Content"] || r.Full_x0020_Content || "";
     text += `--- ${part} | ${title} ---\n${content}\n\n`;
   });
@@ -163,6 +163,7 @@ export function useContent() {
           getListItems(token, siteId, LIST_NAMES.scenarios),
         ]);
         const toolkitText = buildToolkit(tkRows);
+        if (tkRows.length > 0) console.log("Toolkit fields:", Object.keys(tkRows[0]));
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
         const stories = buildStories(stRows);
