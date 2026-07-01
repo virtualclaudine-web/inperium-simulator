@@ -4,6 +4,7 @@ const SITE_HOST = "inperiumservicesinc.sharepoint.com";
 const SITE_PATH = "/sites/ApisVercel";
 
 const LIST_NAMES = {
+  toolkit: "Communication Toolkit",
   fieldGuide: "Field Guide Reference",
   language: "Language Guide",
   stories: "Stories",
@@ -39,9 +40,22 @@ async function getListItems(token, siteId, listName) {
   return data.value.map(i => i.fields);
 }
 
+function buildToolkit(rows) {
+  const active = rows.filter(r => r.Status === "Active");
+  let text = `=== INPERIUM COMMUNICATIONS TOOLKIT v5 ===\n\n`;
+  active.forEach(r => {
+    const num = r["Section #"] || r.Title || "";
+    const title = r["Section Title"] || r.Title || "";
+    const part = r["Part / Category"] || "";
+    const content = r["Full Content"] || r.Full_x0020_Content || "";
+    text += `--- ${part} | ${title} ---\n${content}\n\n`;
+  });
+  return text;
+}
+
 function buildFieldGuide(rows) {
   const active = rows.filter(r => r.Status === "Active");
-  let guide = `=== INPERIUM COMMUNICATIONS FIELD GUIDE & TOOLKIT ===\n\n`;
+  let guide = `=== FIELD GUIDE QUICK REFERENCE ===\n\n`;
   active.forEach(r => {
     const num = r["Section #"] || r.Section_x0020__x23_ || "";
     const title = r["Section Title"] || r.Section_x0020_Title || r.Title || "";
@@ -104,8 +118,9 @@ function buildScenarios(rows) {
   }));
 }
 
-function buildSystemPrompt(fieldGuide, stories, objections) {
-  let prompt = fieldGuide;
+function buildSystemPrompt(toolkit, fieldGuide, stories, objections) {
+  // Full Toolkit is the primary knowledge base — Field Guide adds the quick-reference layer
+  let prompt = toolkit + "\n\n" + fieldGuide;
   if (stories.length) {
     prompt += `\n\n=== STORY LIBRARY (${stories.length} stories) ===\n`;
     stories.forEach(s => {
@@ -139,19 +154,21 @@ export function useContent() {
       try {
         const token = await getToken();
         const siteId = await getSiteId(token);
-        const [fgRows, lgRows, stRows, obRows, scRows] = await Promise.all([
+        const [tkRows, fgRows, lgRows, stRows, obRows, scRows] = await Promise.all([
+          getListItems(token, siteId, LIST_NAMES.toolkit),
           getListItems(token, siteId, LIST_NAMES.fieldGuide),
           getListItems(token, siteId, LIST_NAMES.language),
           getListItems(token, siteId, LIST_NAMES.stories),
           getListItems(token, siteId, LIST_NAMES.objections),
           getListItems(token, siteId, LIST_NAMES.scenarios),
         ]);
+        const toolkitText = buildToolkit(tkRows);
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
         const stories = buildStories(stRows);
         const objections = buildObjections(obRows);
         const scenarios = buildScenarios(scRows);
-        const systemPrompt = buildSystemPrompt(fieldGuideText, stories, objections);
+        const systemPrompt = buildSystemPrompt(toolkitText, fieldGuideText, stories, objections);
         setState({
           loading: false, error: null,
           fieldGuideText, languageGuide, stories, objections, scenarios, systemPrompt,

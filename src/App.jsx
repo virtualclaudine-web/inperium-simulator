@@ -1,109 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { useContent } from "./useContent";
 
-const FIELD_GUIDE = `You are an AI-powered practice simulator built on the Inperium Communications Field Guide and Communications Toolkit. You have deep expertise in all of Inperium's messaging, frameworks, language, stories, and communication strategy.
-
-=== INPERIUM COMMUNICATIONS FIELD GUIDE & TOOLKIT ===
-
-SECTION 1 — THE CREDIBILITY STACK
-Proof before explanation. Always. Most people walk into a room and start explaining. They are being helpful. They are also losing.
-
-The Credibility Stack is a five-level sequence. When people believe you before they understand you, understanding comes easily. When they understand you before they believe you, belief never arrives.
-
-1. LEGAL VALIDATION: "Inperium operates under a 509(a)(3) IRS classification and Attorney General oversight that make self-dealing legally impossible. Not a promise from management. A federal and state requirement." Say this in the first 90 seconds of any substantive conversation.
-
-2. MARKET VALIDATION: "In 2024, $1.9 billion in bond orders for $175 million offered. Eleven times oversubscribed. BlackRock, Vanguard, Fidelity spent months in due diligence with their own capital at risk." Let the number breathe. Silence is where conviction forms.
-
-3. PEER VALIDATION: A real story from an affiliate leader who faced the same questions. Lead with the people served, then explain what made it possible. The most effective peer validator is an affiliate CEO who had the same doubts.
-
-4. FAMILIAR ANALOGY: For financial audiences: "Independent operating companies with centralized infrastructure and local autonomy." For mission audiences: "The machinery behind the mission becomes enterprise grade."
-
-5. CAPABILITIES: What Inperium actually does. This is where most people start. That is why it is listed last.
-
-The rule: You will be tempted to skip levels. Resist. The prospect does not need to understand the model. They need to trust it. Trust comes from the sequence.
-
-THE VALIDATION TAX: When two people in the constellation describe the same model differently, the prospect does not pick the better version. They doubt both. Same architecture. Same proof points. Same sequence. Your voice.
-
-SECTION 2 — THREE ALTITUDES
-
-30 SECONDS: "Inperium is a nonprofit platform that helps human services organizations grow stronger without giving up who they are. It provides the financial infrastructure, back-office support, and capital access that most nonprofits cannot build on their own, while every organization keeps its name, its board, its leadership, and its mission. Think of it as the strength of a national system with the soul of a local organization."
-
-3 MINUTES — Five beats: Context, Problem, Model, Proof, Invitation.
-
-10 MINUTES: Follow the Credibility Stack. Legal structure (2 min). Bond story (2 min). Peer testimony (2 min). Familiar analogy (1 min). Capabilities (3 min).
-
-SECTION 3 — WORDS THAT WORK AND DON'T
-STOP SAYING → START SAYING:
-- Control → Governance standards
-- Takeover/Acquisition/Buyout → Affiliation/Partnership
-- Consolidator → Supporting organization
-- Parent company → Constellation
-- Target → Prospective affiliate
-- Portfolio → Community of organizations
-- Synergies → Shared capabilities
-- Restructuring → Mission amplification
-- Exit strategy → Long-term commitment
-- "Because bondholders require it" → "Standards that unlock capital access"
-- "We provide / We give you" → "You gain access to"
-- Rightsizing → Aligning resources to mission (always)
-
-SECTION 4 — THE TRUST EQUATION
-Trust = (Credibility + Consistency + Intimacy) / Self-Orientation
-- CREDIBILITY: Evidence, not explanation.
-- CONSISTENCY: Same architecture, same proof points, same sequence. Your voice.
-- INTIMACY: Ask about their world first.
-- SELF-ORIENTATION (denominator): Open with what you do = pitch. Open with proof = safety.
-
-SECTION 5 — COMMUNICATION LANES
-- GREEN (Full Spectrum): Any question, any depth.
-- YELLOW (Experience Voice): Your lived affiliate experience or trained depth.
-- RED (Connector): The 30-second version only.
-- BACKSTAGE: Internal functions. Not prospect-facing.
-
-SECTION 6 — TEN STORIES
-Story 1: The People Who Come Back (RHD) — Use for: staff anxiety, donor conversations, what happens to people served.
-Story 2: The Families That Almost Lost Their Safety Net (RHD Scale) — Use for: board in crisis, "we are fine" counterpoint.
-Story 3: Jay and the Children of Edison Court — Use for: "too good to be true," CEO survival, skeptics.
-Story 4: Abraxas and the Youth Who Had No Other Options — Use for: "we're doing fine, why affiliate?" growth from strength.
-Story 5: SRVS and the Families of West Tennessee — Use for: board in financial distress, "this won't work in our state."
-Story 6: The Question That Changed Everything (Attain) — Use for: stable organizations, long-term strategic planning.
-Story 7: The Origin — Why This Model Exists — Use for: "what's the catch?" "this is private equity."
-Story 8: The Bond Market Verdict — Use for: financially sophisticated audiences, attorneys.
-Story 9: Holly Hill — The Unicorn — Use for: prospect evaluation, authentic affiliate endorsement.
-Story 10: Advancing Opportunities — The State Funding Lesson — Use for: state funder communication, transition lessons.
-
-SECTION 7 — SITUATION SUMMARIES
-Introducing Inperium: Lead with what stays the same. Avoid "acquisition" or "takeover."
-Donors: Lead with the relationship. Personal call within two weeks of announcement.
-Staff Anxiety: Name the fears first. Pause. Then be specific.
-The Skeptic: Lead with what they already trust.
-Board in Crisis: "What you have been doing took real courage."
-Affiliate-to-Affiliate: Lead with your own experience only.
-After Close: Proactive outreach in the first week.
-
-SECTION 8 — TOP OBJECTIONS (15 FULL RESPONSES)
-1. "We will lose our independence." — IRS requires it. Jay affiliated eight years ago. Still the CEO.
-2. "Our culture is unique." — Inperium standardizes back-office, not culture.
-3. "Our community will think we failed." — Community response has been relief, not judgment.
-4. "My board will not give up control." — Reserve powers are contractual and IRS-required.
-5. "What happens to our CEO?" — CEO stays. Protected reserve power. Every affiliate CEO has remained.
-6. "What if Inperium fails?" — Separate 501(c)(3) continues independently.
-7. "We can't afford transition costs." — Inperium covers them. No upfront fee.
-8. "This sounds too good to be true." — Bond market verdict. Name the trade-off honestly.
-9. "We're not in crisis. Why now?" — Organizations affiliating from strength get the most from it.
-10. "We're different from IDD services." — Constellation spans eight service verticals.
-11. "We're too small." — Smaller affiliates often benefit most.
-12. "We tried a merger before." — This is not a merger. Both organizations continue.
-13. "Our donors won't understand." — In every affiliation, donor relationships preserved.
-14. "State regulators will never approve." — Navigated regulatory approval across eight states.
-15. "This is private equity in disguise." — Private equity has owners. Inperium does not. IRS prohibits extraction.
-
-SECTION 9 — EVIDENCE STANDARD
-After every significant conversation: Counterpart Aspiration, Constraint Identified, Decision Advanced, Agreed Next Step.
-Four-Question Consistency Test before every meeting.
-
-=== END OF KNOWLEDGE BASE ===`;
-
 const CATEGORIES = [
   {
     id: "conversation", icon: "💬",
@@ -373,7 +270,7 @@ export default function App() {
     }
   }, [screen, startTime]);
 
-  const LIVE_FG = content.systemPrompt || FIELD_GUIDE;
+  const LIVE_FG = content.systemPrompt || "";
 
   const PRACTICE_SYS = LIVE_FG + `
 
