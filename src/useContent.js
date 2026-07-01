@@ -41,12 +41,12 @@ async function getListItems(token, siteId, listName) {
 }
 
 function buildToolkit(rows) {
-  const active = rows.filter(r => r.field_4 === "Active" || r.Status === "Active");
+  const active = rows.filter(r => r.field_4 === "Active");
   let text = `=== INPERIUM COMMUNICATIONS TOOLKIT v5 ===\n\n`;
   active.forEach(r => {
-    const title = r.field_1 || r["Section Title"] || "";
-    const part = r.field_2 || r["Part / Category"] || "";
-    const content = r.field_3 || r["Full Content"] || "";
+    const title = r.field_1 || "";
+    const part = r.field_2 || "";
+    const content = r.field_3 || "";
     text += `--- ${part} | ${title} ---\n${content}\n\n`;
   });
   return text;
@@ -163,11 +163,8 @@ export function useContent() {
         ]);
         const toolkitText = buildToolkit(tkRows);
         if (tkRows.length > 0) {
-          console.log("Toolkit fields:", Object.keys(tkRows[0]));
-          console.log("Toolkit first row:", tkRows[0]);
           console.log("Toolkit active rows:", tkRows.filter(r => r.field_4 === "Active").length, "of", tkRows.length);
-          console.log("field_4 sample values:", tkRows.slice(0,5).map(r => r.field_4));
-          console.log("field_5 sample values:", tkRows.slice(0,5).map(r => r.field_5));
+          console.log("Toolkit content length:", toolkitText.length, "chars");
         }
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
