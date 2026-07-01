@@ -164,7 +164,11 @@ export function useContent() {
           getListItems(token, siteId, LIST_NAMES.scenarios),
         ]);
         const toolkitText = buildToolkit(tkRows);
-        if (tkRows.length > 0) console.log("Toolkit fields:", Object.keys(tkRows[0]));
+        if (tkRows.length > 0) {
+          console.log("Toolkit fields:", Object.keys(tkRows[0]));
+          console.log("Toolkit first row:", tkRows[0]);
+          console.log("Toolkit active rows:", tkRows.filter(r => r.field_5 === "Active").length, "of", tkRows.length);
+        }
         const fieldGuideText = buildFieldGuide(fgRows);
         const languageGuide = buildLanguageGuide(lgRows);
         const stories = buildStories(stRows);
