@@ -1,25 +1,25 @@
 /**
- * useDeliveryReport.js
+ * useDeliveryReport.js (v2)
  *
- * Phase 1 of the voice-mode delivery coaching (Yoodli-style feedback on HOW
- * something was said, not just what was said). This is the "Easy tier":
- * pace, filler words, and response length — all computed from the transcript
- * and timestamps voice mode already produces. No third-party service, no
- * additional cost, purely client-side text/timing math.
+ * Scope, deliberately narrowed for accuracy over breadth:
+ *   - Filler words: transcript text matching — already accurate, unchanged.
+ *   - Pauses: real audio-based detection (from useAudioPauseDetector), not
+ *     a transcript/timing proxy. Localized against finalized phrases using
+ *     timestamps from useVoiceMode's getTranscriptChunks().
+ *   - Content analysis (Aspiration Clarity, etc.) is handled entirely by the
+ *     existing rubric/debrief system — intentionally not duplicated here.
+ *   - Pace (wpm) removed — not part of the requested scope.
  *
  * USAGE:
  *   const { recordUtterance, sessionReport, resetSession } = useDeliveryReport();
  *
- *   // Each time the user finishes a spoken turn (e.g. in stopListening handler):
- *   recordUtterance(transcriptText, speakingDurationSeconds);
- *
- *   // At session end, render sessionReport alongside the existing content debrief.
+ *   // After stopMonitoring() returns { pauses, sessionStartTime }, and you have
+ *   // the finalized transcript + chunk timestamps for that same utterance:
+ *   recordUtterance({ transcript, pauses, chunks });
  */
 
 import { useState, useCallback } from "react";
 
-// Common filler words/phrases to flag. Checked as whole-word matches so
-// "like" doesn't false-positive inside "unlike" or "likely".
 const FILLER_PATTERNS = [
   { term: "um", regex: /\bum+\b/gi },
   { term: "uh", regex: /\buh+\b/gi },
@@ -31,65 +31,59 @@ const FILLER_PATTERNS = [
   { term: "basically", regex: /\bbasically\b/gi },
 ];
 
-// Natural conversational pace is roughly 120-160 wpm. Outside this range
-// gets flagged as an observation, not a hard error.
-const PACE_TARGET_MIN = 120;
-const PACE_TARGET_MAX = 160;
-
-// Response length guidance: the Toolkit favors concise, Stat-Then-Meaning
-// answers over rambling ones. These are soft thresholds, not hard rules.
-const LENGTH_CONCISE_MAX_WORDS = 60;
-const LENGTH_RAMBLING_MIN_WORDS = 130;
-
-function countWords(text) {
-  return (text.trim().match(/\S+/g) || []).length;
-}
-
-function analyzeUtterance(text, durationSeconds) {
-  const wordCount = countWords(text);
-  const minutes = Math.max(durationSeconds / 60, 0.05); // avoid divide-by-zero on very short clips
-  const wpm = Math.round(wordCount / minutes);
-
+function analyzeFillers(text) {
   const fillers = FILLER_PATTERNS
     .map(({ term, regex }) => ({ term, count: (text.match(regex) || []).length }))
     .filter(f => f.count > 0);
-  const fillerTotal = fillers.reduce((sum, f) => sum + f.count, 0);
+  return { fillers, fillerTotal: fillers.reduce((sum, f) => sum + f.count, 0) };
+}
 
-  let paceNote = null;
-  if (wpm > PACE_TARGET_MAX) {
-    paceNote = `Fast pace (${wpm} wpm) — consider slowing down, especially before key proof points.`;
-  } else if (wpm < PACE_TARGET_MIN && wordCount > 8) {
-    paceNote = `Slower pace (${wpm} wpm) — fine for gravity, but check it isn't hesitation.`;
-  }
+// Places each detected pause between the two transcript phrases it fell between,
+// using timestamps — this is what makes "where" meaningful without needing
+// per-word timestamps (which the Web Speech API doesn't expose).
+function localizePauses(pauses, chunks) {
+  return pauses.map(pause => {
+    const before = [...chunks].reverse().find(c => c.timestamp <= pause.startTime);
+    const after = chunks.find(c => c.timestamp >= pause.endTime);
+    return {
+      ...pause,
+      afterPhrase: before ? before.text : null,
+      beforePhrase: after ? after.text : null,
+    };
+  });
+}
 
-  let lengthNote = null;
-  if (wordCount >= LENGTH_RAMBLING_MIN_WORDS) {
-    lengthNote = `Long response (${wordCount} words) — could this be tightened into one clear Stat-Then-Meaning statement?`;
-  } else if (wordCount <= LENGTH_CONCISE_MAX_WORDS && wordCount > 0) {
-    lengthNote = `Concise response (${wordCount} words) — good discipline.`;
-  }
+function analyzeUtterance({ transcript, pauses = [], chunks = [] }) {
+  const { fillers, fillerTotal } = analyzeFillers(transcript);
+  const localizedPauses = localizePauses(pauses, chunks);
+  const totalPauseMs = pauses.reduce((s, p) => s + p.durationMs, 0);
+  const longestPause = pauses.length
+    ? localizedPauses.reduce((max, p) => (p.durationMs > max.durationMs ? p : max), localizedPauses[0])
+    : null;
 
-  return { wordCount, durationSeconds, wpm, fillers, fillerTotal, paceNote, lengthNote };
+  return {
+    transcript,
+    fillers,
+    fillerTotal,
+    pauseCount: pauses.length,
+    totalPauseMs,
+    longestPause,
+    pauses: localizedPauses,
+  };
 }
 
 export function useDeliveryReport() {
   const [utterances, setUtterances] = useState([]);
 
-  const recordUtterance = useCallback((text, durationSeconds) => {
-    if (!text || !text.trim()) return;
-    const analysis = analyzeUtterance(text, durationSeconds);
-    setUtterances(prev => [...prev, analysis]);
+  const recordUtterance = useCallback(({ transcript, pauses, chunks }) => {
+    if (!transcript || !transcript.trim()) return;
+    setUtterances(prev => [...prev, analyzeUtterance({ transcript, pauses, chunks })]);
   }, []);
 
   const resetSession = useCallback(() => setUtterances([]), []);
 
-  // Roll individual utterances up into a session-level report.
   const sessionReport = (() => {
     if (utterances.length === 0) return null;
-
-    const totalWords = utterances.reduce((s, u) => s + u.wordCount, 0);
-    const totalSeconds = utterances.reduce((s, u) => s + u.durationSeconds, 0);
-    const avgWpm = Math.round(totalWords / Math.max(totalSeconds / 60, 0.05));
 
     const fillerCounts = {};
     utterances.forEach(u => u.fillers.forEach(f => {
@@ -101,18 +95,22 @@ export function useDeliveryReport() {
       .slice(0, 3)
       .map(([term, count]) => ({ term, count }));
 
-    const ramblingCount = utterances.filter(u => u.wordCount >= LENGTH_RAMBLING_MIN_WORDS).length;
-    const conciseCount = utterances.filter(u => u.wordCount > 0 && u.wordCount <= LENGTH_CONCISE_MAX_WORDS).length;
+    const totalPauses = utterances.reduce((s, u) => s + u.pauseCount, 0);
+    const totalPauseMs = utterances.reduce((s, u) => s + u.totalPauseMs, 0);
+    const allPauses = utterances.flatMap(u => u.pauses);
+    const longestPauseOverall = allPauses.length
+      ? allPauses.reduce((max, p) => (p.durationMs > max.durationMs ? p : max), allPauses[0])
+      : null;
 
     return {
       turnCount: utterances.length,
-      avgWpm,
-      paceFlag: avgWpm > PACE_TARGET_MAX ? "fast" : avgWpm < PACE_TARGET_MIN ? "slow" : "natural",
       totalFillers,
       fillersPerTurn: Math.round((totalFillers / utterances.length) * 10) / 10,
       topFillers,
-      ramblingCount,
-      conciseCount,
+      totalPauses,
+      pausesPerTurn: Math.round((totalPauses / utterances.length) * 10) / 10,
+      avgPauseMs: totalPauses > 0 ? Math.round(totalPauseMs / totalPauses) : 0,
+      longestPauseOverall,
       utterances,
     };
   })();

@@ -58,6 +58,9 @@ export function useVoiceMode() {
   // Committed final text lives in a ref (not state) so each onresult event
   // can read-and-append synchronously without racing React's state batching.
   const finalTextRef = useRef("");
+  // Timestamped record of each finalized phrase, used to localize pauses
+  // (detected separately via raw audio) against what was actually said.
+  const chunkTimestampsRef = useRef([]);
   // Accumulates only the seconds where the browser detected actual speech
   // (via onspeechstart/onspeechend), excluding silence, pauses, and hesitation.
   const speakingSecondsRef = useRef(0);
@@ -93,6 +96,9 @@ export function useVoiceMode() {
         const chunk = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
           finalTextRef.current += chunk + " ";
+          // Record when this phrase was finalized so pause timestamps
+          // (from the separate audio analyser) can be placed between phrases.
+          chunkTimestampsRef.current.push({ text: chunk.trim(), timestamp: Date.now() });
         } else {
           interimTranscript += chunk;
         }
@@ -148,6 +154,7 @@ export function useVoiceMode() {
     if (!recognitionRef.current) return;
     setMicError(null);
     finalTextRef.current = "";
+    chunkTimestampsRef.current = [];
     setTranscript("");
     speakingSecondsRef.current = 0;
     segmentStartRef.current = null;
@@ -197,6 +204,8 @@ export function useVoiceMode() {
     setIsSpeaking(false);
   }, []);
 
+  const getTranscriptChunks = useCallback(() => chunkTimestampsRef.current, []);
+
   return {
     isMicSupported,
     isListening,
@@ -209,5 +218,6 @@ export function useVoiceMode() {
     stopSpeaking,
     isSpeaking,
     lastUtteranceDuration,
+    getTranscriptChunks,
   };
 }

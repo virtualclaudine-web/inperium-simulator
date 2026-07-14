@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { useContent } from "./useContent";
 import { useVoiceMode } from "./useVoiceMode";
 import { useDeliveryReport } from "./useDeliveryReport";
+import { useAudioPauseDetector } from "./useAudioPauseDetector";
 
 const CATEGORIES = [
   {
@@ -262,6 +263,7 @@ export default function App() {
   const refEndRef = useRef(null);
   const voice = useVoiceMode();
   const deliveryReport = useDeliveryReport();
+  const pauseDetector = useAudioPauseDetector();
   const wasListeningRef = useRef(false);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
@@ -280,18 +282,19 @@ export default function App() {
     if (practiceMode === "voice" && voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
   }, [voice.transcript, practiceMode]);
   // Record the delivery-report data exactly when a listening session ends —
-  // by then, the hook has finalized both the transcript and the real
-  // speech-only duration (via onspeechstart/onspeechend), not button-click timing.
+  // by then both the transcript and the real audio-based pause data are finalized.
   useEffect(() => {
     if (wasListeningRef.current && !voice.isListening && practiceMode === "voice") {
-      deliveryReport.recordUtterance(voice.transcript, voice.lastUtteranceDuration);
+      const { pauses } = pauseDetector.stopMonitoring();
+      const chunks = voice.getTranscriptChunks();
+      deliveryReport.recordUtterance({ transcript: voice.transcript, pauses, chunks });
     }
     wasListeningRef.current = voice.isListening;
   }, [voice.isListening]);
-  // Switching modes mid-session: stop any active mic and clear partial voice state so it can't leak into typed input.
+  // Switching modes mid-session: stop any active mic/audio monitoring and clear partial voice state so it can't leak into typed input.
   useEffect(() => {
     if (practiceMode === "text") {
-      if (voice.isListening) voice.stopListening();
+      if (voice.isListening) { voice.stopListening(); pauseDetector.stopMonitoring(); }
       voice.stopSpeaking();
       voice.resetTranscript();
     }
@@ -591,12 +594,13 @@ After your response, add a brief coaching note in italics starting with "Coach n
               style={{ flex: 1, background: practiceMode === "voice" ? CS : W, border: flaggedWords.length > 0 ? "1px solid #F59E0B" : `1px solid rgba(13,34,64,0.15)`, borderRadius: 8, color: N, padding: "11px 14px", fontFamily: PF, fontSize: 14, fontStyle: practiceMode === "voice" ? "italic" : "normal", lineHeight: 1.6, resize: "none", outline: "none", minHeight: 46 }}
               placeholder={practiceMode === "voice" ? "Tap the mic and speak your response…" : `Respond to ${scenario?.label}...`} rows={1} />
             {voice.isMicSupported && practiceMode === "voice" && (
-              <button onClick={() => {
+              <button onClick={async () => {
                 if (voice.isListening) {
                   voice.stopListening();
                 } else {
                   voice.resetTranscript();
                   setInput("");
+                  await pauseDetector.startMonitoring();
                   voice.startListening();
                 }
               }}
@@ -690,14 +694,12 @@ After your response, add a brief coaching note in italics starting with "Coach n
               <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 12 }}>Delivery report · voice</div>
               <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontFamily: PF, fontSize: 20, color: N, lineHeight: 1 }}>{deliveryReport.sessionReport.avgWpm}<span style={{ fontFamily: SF, fontSize: 10, color: M }}> wpm</span></div>
-                  <div style={{ fontFamily: SF, fontSize: 10, color: M, marginTop: 2 }}>
-                    {deliveryReport.sessionReport.paceFlag === "natural" ? "Natural pace" : deliveryReport.sessionReport.paceFlag === "fast" ? "Running fast" : "On the slower side"}
-                  </div>
-                </div>
-                <div>
                   <div style={{ fontFamily: PF, fontSize: 20, color: N, lineHeight: 1 }}>{deliveryReport.sessionReport.fillersPerTurn}</div>
                   <div style={{ fontFamily: SF, fontSize: 10, color: M, marginTop: 2 }}>filler words / turn</div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: PF, fontSize: 20, color: N, lineHeight: 1 }}>{deliveryReport.sessionReport.pausesPerTurn}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: M, marginTop: 2 }}>pauses / turn (0.6s+)</div>
                 </div>
               </div>
               {deliveryReport.sessionReport.topFillers.length > 0 && (
@@ -709,13 +711,20 @@ After your response, add a brief coaching note in italics starting with "Coach n
                   ))}
                 </div>
               )}
-              <div style={{ fontFamily: SF, fontSize: 11, color: N, lineHeight: 1.5, borderTop: `0.5px solid ${B}`, paddingTop: 10 }}>
-                {deliveryReport.sessionReport.ramblingCount > 0
-                  ? `${deliveryReport.sessionReport.ramblingCount} of ${deliveryReport.sessionReport.turnCount} spoken turns ran long — look for the single strongest Stat-Then-Meaning line instead.`
-                  : deliveryReport.sessionReport.conciseCount === deliveryReport.sessionReport.turnCount
-                  ? "Every spoken turn was concise. That discipline is exactly what the Toolkit asks for."
-                  : "Response length looked reasonable across this session."}
-              </div>
+              {deliveryReport.sessionReport.longestPauseOverall && (
+                <div style={{ fontFamily: SF, fontSize: 11, color: N, lineHeight: 1.5, borderTop: `0.5px solid ${B}`, paddingTop: 10 }}>
+                  <span style={{ color: BRL, fontWeight: 500 }}>Longest pause: </span>
+                  {(deliveryReport.sessionReport.longestPauseOverall.durationMs / 1000).toFixed(1)}s
+                  {deliveryReport.sessionReport.longestPauseOverall.afterPhrase && (
+                    <> — right after <span style={{ fontStyle: "italic" }}>"…{deliveryReport.sessionReport.longestPauseOverall.afterPhrase.split(" ").slice(-6).join(" ")}"</span></>
+                  )}
+                </div>
+              )}
+              {deliveryReport.sessionReport.totalPauses === 0 && (
+                <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.5, borderTop: `0.5px solid ${B}`, paddingTop: 10 }}>
+                  No pauses of 0.6s or longer detected — worth deliberately trying the Silence Drill next time.
+                </div>
+              )}
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
