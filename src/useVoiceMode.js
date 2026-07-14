@@ -49,11 +49,22 @@ export function useVoiceMode() {
   const [transcript, setTranscript] = useState("");
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [micError, setMicError] = useState(null);
+  // Actual voice-active seconds for the last completed listening session —
+  // used for pace calculations instead of "time the mic button was held open,"
+  // which wrongly counts thinking/hesitation time as speaking time.
+  const [lastUtteranceDuration, setLastUtteranceDuration] = useState(0);
 
   const recognitionRef = useRef(null);
   // Committed final text lives in a ref (not state) so each onresult event
   // can read-and-append synchronously without racing React's state batching.
   const finalTextRef = useRef("");
+  // Accumulates only the seconds where the browser detected actual speech
+  // (via onspeechstart/onspeechend), excluding silence, pauses, and hesitation.
+  const speakingSecondsRef = useRef(0);
+  const segmentStartRef = useRef(null);
+  // Fallback only: total mic-open time, used if a browser never fires
+  // onspeechstart/onspeechend for some reason.
+  const sessionStartRef = useRef(null);
 
   useEffect(() => {
     const SpeechRecognition =
@@ -90,6 +101,21 @@ export function useVoiceMode() {
       setTranscript((finalTextRef.current + interimTranscript).trim());
     };
 
+    // Fires when the browser's voice-activity detection hears actual speech
+    // begin — not when the mic was turned on.
+    recognition.onspeechstart = () => {
+      segmentStartRef.current = Date.now();
+    };
+
+    // Fires when the browser detects the person has stopped talking (even if
+    // recognition itself keeps listening for more). Close out this segment's
+    // duration so silence/pauses afterward don't count as speaking time.
+    recognition.onspeechend = () => {
+      if (segmentStartRef.current) {
+        speakingSecondsRef.current += (Date.now() - segmentStartRef.current) / 1000;
+        segmentStartRef.current = null;
+      }
+    };
 
     recognition.onerror = (event) => {
       setMicError(event.error);
@@ -97,6 +123,17 @@ export function useVoiceMode() {
     };
 
     recognition.onend = () => {
+      // Close out any speech segment still open when recognition stopped.
+      if (segmentStartRef.current) {
+        speakingSecondsRef.current += (Date.now() - segmentStartRef.current) / 1000;
+        segmentStartRef.current = null;
+      }
+      // Fallback: if this browser never fired onspeechstart/onspeechend at
+      // all, use total mic-open time rather than reporting zero.
+      const fallbackSeconds = sessionStartRef.current
+        ? (Date.now() - sessionStartRef.current) / 1000
+        : 0;
+      setLastUtteranceDuration(speakingSecondsRef.current > 0 ? speakingSecondsRef.current : fallbackSeconds);
       setIsListening(false);
     };
 
@@ -112,6 +149,9 @@ export function useVoiceMode() {
     setMicError(null);
     finalTextRef.current = "";
     setTranscript("");
+    speakingSecondsRef.current = 0;
+    segmentStartRef.current = null;
+    sessionStartRef.current = Date.now();
     try {
       recognitionRef.current.start();
       setIsListening(true);
@@ -123,8 +163,10 @@ export function useVoiceMode() {
 
   const stopListening = useCallback(() => {
     if (!recognitionRef.current) return;
+    // Don't set isListening/duration here — recognition.onend fires shortly
+    // after stop() and computes the final speaking duration there, avoiding
+    // a race where we'd read stale/incomplete timing data synchronously.
     recognitionRef.current.stop();
-    setIsListening(false);
   }, []);
 
   const resetTranscript = useCallback(() => {
@@ -166,5 +208,6 @@ export function useVoiceMode() {
     speak,
     stopSpeaking,
     isSpeaking,
+    lastUtteranceDuration,
   };
 }

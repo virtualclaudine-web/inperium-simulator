@@ -262,7 +262,7 @@ export default function App() {
   const refEndRef = useRef(null);
   const voice = useVoiceMode();
   const deliveryReport = useDeliveryReport();
-  const speechStartRef = useRef(null);
+  const wasListeningRef = useRef(false);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { refEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [refMessages]);
@@ -279,6 +279,15 @@ export default function App() {
   useEffect(() => {
     if (practiceMode === "voice" && voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
   }, [voice.transcript, practiceMode]);
+  // Record the delivery-report data exactly when a listening session ends —
+  // by then, the hook has finalized both the transcript and the real
+  // speech-only duration (via onspeechstart/onspeechend), not button-click timing.
+  useEffect(() => {
+    if (wasListeningRef.current && !voice.isListening && practiceMode === "voice") {
+      deliveryReport.recordUtterance(voice.transcript, voice.lastUtteranceDuration);
+    }
+    wasListeningRef.current = voice.isListening;
+  }, [voice.isListening]);
   // Switching modes mid-session: stop any active mic and clear partial voice state so it can't leak into typed input.
   useEffect(() => {
     if (practiceMode === "text") {
@@ -585,12 +594,9 @@ After your response, add a brief coaching note in italics starting with "Coach n
               <button onClick={() => {
                 if (voice.isListening) {
                   voice.stopListening();
-                  const durationSeconds = speechStartRef.current ? (Date.now() - speechStartRef.current) / 1000 : 0;
-                  deliveryReport.recordUtterance(voice.transcript, durationSeconds);
                 } else {
                   voice.resetTranscript();
                   setInput("");
-                  speechStartRef.current = Date.now();
                   voice.startListening();
                 }
               }}
