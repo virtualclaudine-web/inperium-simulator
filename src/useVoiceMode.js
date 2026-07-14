@@ -51,8 +51,10 @@ export function useVoiceMode() {
   const [micError, setMicError] = useState(null);
 
   const recognitionRef = useRef(null);
+  // Committed final text lives in a ref (not state) so each onresult event
+  // can read-and-append synchronously without racing React's state batching.
+  const finalTextRef = useRef("");
 
-  // --- Feature detection on mount ---
   useEffect(() => {
     const SpeechRecognition =
       window.SpeechRecognition || window.webkitSpeechRecognition;
@@ -70,24 +72,24 @@ export function useVoiceMode() {
     recognition.lang = "en-US";
 
     recognition.onresult = (event) => {
-      let finalTranscript = "";
+      // event.resultIndex onward is a live re-transcription of the CURRENT
+      // utterance (growing confidence: "i'm" -> "i'm not" -> "i'm not sure").
+      // Interim text must REPLACE last event's interim guess, never append
+      // to it — appending is what caused the duplicated/garbled transcript.
       let interimTranscript = "";
 
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const chunk = event.results[i][0].transcript;
         if (event.results[i].isFinal) {
-          finalTranscript += chunk + " ";
+          finalTextRef.current += chunk + " ";
         } else {
           interimTranscript += chunk;
         }
       }
 
-      setTranscript((prev) => {
-        // Keep committed final text, append live interim text for responsiveness.
-        const base = finalTranscript ? prev + finalTranscript : prev;
-        return interimTranscript ? base + interimTranscript : base;
-      });
+      setTranscript((finalTextRef.current + interimTranscript).trim());
     };
+
 
     recognition.onerror = (event) => {
       setMicError(event.error);
@@ -108,6 +110,7 @@ export function useVoiceMode() {
   const startListening = useCallback(() => {
     if (!recognitionRef.current) return;
     setMicError(null);
+    finalTextRef.current = "";
     setTranscript("");
     try {
       recognitionRef.current.start();
@@ -125,6 +128,7 @@ export function useVoiceMode() {
   }, []);
 
   const resetTranscript = useCallback(() => {
+    finalTextRef.current = "";
     setTranscript("");
   }, []);
 

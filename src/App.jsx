@@ -256,6 +256,7 @@ export default function App() {
   const [refInput, setRefInput] = useState("");
   const [refMessages, setRefMessages] = useState([]);
   const [refLoading, setRefLoading] = useState(false);
+  const [practiceMode, setPracticeMode] = useState("text"); // "text" | "voice" — explicit switch, not an always-on mic
   const endRef = useRef(null);
   const taRef = useRef(null);
   const refEndRef = useRef(null);
@@ -268,15 +269,24 @@ export default function App() {
   useEffect(() => {
     if (taRef.current) { taRef.current.style.height = "auto"; taRef.current.style.height = Math.min(taRef.current.scrollHeight, 140) + "px"; }
   }, [input]);
-  // Read the character's line aloud whenever a new assistant message arrives.
+  // Read the character's line aloud only when the person has explicitly switched to Voice mode.
   useEffect(() => {
+    if (practiceMode !== "voice") return;
     const last = messages[messages.length - 1];
     if (last?.role === "assistant") voice.speak(last.content);
-  }, [messages]);
-  // Feed live speech transcript into the existing input state as the user talks.
+  }, [messages, practiceMode]);
+  // Feed live speech transcript into the existing input state — voice mode only.
   useEffect(() => {
-    if (voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
-  }, [voice.transcript]);
+    if (practiceMode === "voice" && voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
+  }, [voice.transcript, practiceMode]);
+  // Switching modes mid-session: stop any active mic and clear partial voice state so it can't leak into typed input.
+  useEffect(() => {
+    if (practiceMode === "text") {
+      if (voice.isListening) voice.stopListening();
+      voice.stopSpeaking();
+      voice.resetTranscript();
+    }
+  }, [practiceMode]);
   useEffect(() => {
     if (screen === "practice" && startTime) {
       const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
@@ -350,6 +360,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
     setExchanges(0); setDebrief(null);
     setStartTime(Date.now()); setElapsed(0);
     deliveryReport.resetSession();
+    setPracticeMode("text");
     setScreen("practice");
   };
 
@@ -504,6 +515,18 @@ After your response, add a brief coaching note in italics starting with "Coach n
             <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 500, background: ds.bg, color: ds.color, padding: "2px 9px", borderRadius: 10 }}>{scenario?.difficulty}</span>
           </div>
           <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {voice.isMicSupported && (
+              <div style={{ display: "flex", background: CS, borderRadius: 8, padding: 2, gap: 2 }}>
+                <button onClick={() => setPracticeMode("text")}
+                  style={{ background: practiceMode === "text" ? N : "transparent", color: practiceMode === "text" ? CR : M, border: "none", borderRadius: 6, padding: "5px 12px", fontFamily: SF, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+                  Text
+                </button>
+                <button onClick={() => setPracticeMode("voice")}
+                  style={{ background: practiceMode === "voice" ? N : "transparent", color: practiceMode === "voice" ? CR : M, border: "none", borderRadius: 6, padding: "5px 12px", fontFamily: SF, fontSize: 11, fontWeight: 500, cursor: "pointer" }}>
+                  🎙 Voice
+                </button>
+              </div>
+            )}
             {voice.isSpeaking && (
               <button onClick={voice.stopSpeaking}
                 style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: `1px solid ${BR}`, color: BRL, padding: "4px 10px", borderRadius: 12, cursor: "pointer", fontFamily: SF, fontSize: 11 }}>
@@ -555,29 +578,32 @@ After your response, add a brief coaching note in italics starting with "Coach n
             <textarea ref={taRef} value={input}
               onChange={e => { setInput(e.target.value); setFlaggedWords(checkLanguage(e.target.value)); }}
               onKeyDown={onKey}
-              style={{ flex: 1, background: W, border: flaggedWords.length > 0 ? "1px solid #F59E0B" : `1px solid rgba(13,34,64,0.15)`, borderRadius: 8, color: N, padding: "11px 14px", fontFamily: PF, fontSize: 14, lineHeight: 1.6, resize: "none", outline: "none", minHeight: 46 }}
-              placeholder={`Respond to ${scenario?.label}...`} rows={1} />
-            {voice.isMicSupported && (
+              readOnly={practiceMode === "voice"}
+              style={{ flex: 1, background: practiceMode === "voice" ? CS : W, border: flaggedWords.length > 0 ? "1px solid #F59E0B" : `1px solid rgba(13,34,64,0.15)`, borderRadius: 8, color: N, padding: "11px 14px", fontFamily: PF, fontSize: 14, fontStyle: practiceMode === "voice" ? "italic" : "normal", lineHeight: 1.6, resize: "none", outline: "none", minHeight: 46 }}
+              placeholder={practiceMode === "voice" ? "Tap the mic and speak your response…" : `Respond to ${scenario?.label}...`} rows={1} />
+            {voice.isMicSupported && practiceMode === "voice" && (
               <button onClick={() => {
                 if (voice.isListening) {
                   voice.stopListening();
                   const durationSeconds = speechStartRef.current ? (Date.now() - speechStartRef.current) / 1000 : 0;
                   deliveryReport.recordUtterance(voice.transcript, durationSeconds);
                 } else {
+                  voice.resetTranscript();
+                  setInput("");
                   speechStartRef.current = Date.now();
                   voice.startListening();
                 }
               }}
                 title={voice.isListening ? "Stop listening" : "Speak your response"}
-                style={{ background: voice.isListening ? "#A33A3A" : W, border: `1px solid ${voice.isListening ? "#A33A3A" : B}`, color: voice.isListening ? W : N, padding: "11px 14px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 15, height: 46, flexShrink: 0, transition: "all 0.15s" }}>
-                {voice.isListening ? "● Stop" : "🎙"}
+                style={{ background: voice.isListening ? "#A33A3A" : N, border: `1px solid ${voice.isListening ? "#A33A3A" : N}`, color: CR, padding: "11px 16px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500, height: 46, flexShrink: 0, transition: "all 0.15s" }}>
+                {voice.isListening ? "● Stop" : "🎙 Speak"}
               </button>
             )}
             <button onClick={send} disabled={loading || !input.trim()}
               style={{ background: N, border: "none", color: CR, padding: "11px 20px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500, height: 46, opacity: loading || !input.trim() ? 0.4 : 1, flexShrink: 0, transition: "opacity 0.15s" }}>Send</button>
           </div>
           <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setStartTime(Date.now()); setElapsed(0); setFlaggedWords([]); }}
+            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setStartTime(Date.now()); setElapsed(0); setFlaggedWords([]); deliveryReport.resetSession(); }}
               style={{ fontFamily: SF, fontSize: 11, color: M, background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline", padding: 0 }}>Restart</button>
             {exchanges >= 1 ? (
               <button onClick={endSession} disabled={loading}
@@ -687,7 +713,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
             </div>
           )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
-            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); deliveryReport.resetSession(); setScreen("practice"); }}
+            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); deliveryReport.resetSession(); setPracticeMode("text"); setScreen("practice"); }}
               style={{ background: CS, border: `1px solid rgba(13,34,64,0.15)`, color: N, padding: "10px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>Try again</button>
             <button onClick={goHome}
               style={{ background: N, border: "none", color: CR, padding: "10px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>← New scenario</button>
