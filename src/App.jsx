@@ -1,5 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import { useContent } from "./useContent";
+import { useVoiceMode } from "./useVoiceMode";
+import { useDeliveryReport } from "./useDeliveryReport";
 
 const CATEGORIES = [
   {
@@ -257,12 +259,24 @@ export default function App() {
   const endRef = useRef(null);
   const taRef = useRef(null);
   const refEndRef = useRef(null);
+  const voice = useVoiceMode();
+  const deliveryReport = useDeliveryReport();
+  const speechStartRef = useRef(null);
 
   useEffect(() => { endRef.current?.scrollIntoView({ behavior: "smooth" }); }, [messages]);
   useEffect(() => { refEndRef.current?.scrollIntoView({ behavior: "smooth" }); }, [refMessages]);
   useEffect(() => {
     if (taRef.current) { taRef.current.style.height = "auto"; taRef.current.style.height = Math.min(taRef.current.scrollHeight, 140) + "px"; }
   }, [input]);
+  // Read the character's line aloud whenever a new assistant message arrives.
+  useEffect(() => {
+    const last = messages[messages.length - 1];
+    if (last?.role === "assistant") voice.speak(last.content);
+  }, [messages]);
+  // Feed live speech transcript into the existing input state as the user talks.
+  useEffect(() => {
+    if (voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
+  }, [voice.transcript]);
   useEffect(() => {
     if (screen === "practice" && startTime) {
       const t = setInterval(() => setElapsed(Math.floor((Date.now() - startTime) / 1000)), 1000);
@@ -335,6 +349,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
     setMessages([{ role: "assistant", content: sc.opener }]);
     setExchanges(0); setDebrief(null);
     setStartTime(Date.now()); setElapsed(0);
+    deliveryReport.resetSession();
     setScreen("practice");
   };
 
@@ -488,7 +503,15 @@ After your response, add a brief coaching note in italics starting with "Coach n
             <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>{scenario?.label}</span>
             <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 500, background: ds.bg, color: ds.color, padding: "2px 9px", borderRadius: 10 }}>{scenario?.difficulty}</span>
           </div>
-          <span style={{ fontFamily: SF, fontSize: 12, color: M, fontVariantNumeric: "tabular-nums" }}>{fmtTime(elapsed)}</span>
+          <div style={{ display: "flex", alignItems: "center", gap: 14 }}>
+            {voice.isSpeaking && (
+              <button onClick={voice.stopSpeaking}
+                style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: `1px solid ${BR}`, color: BRL, padding: "4px 10px", borderRadius: 12, cursor: "pointer", fontFamily: SF, fontSize: 11 }}>
+                🔊 Speaking… tap to stop
+              </button>
+            )}
+            <span style={{ fontFamily: SF, fontSize: 12, color: M, fontVariantNumeric: "tabular-nums" }}>{fmtTime(elapsed)}</span>
+          </div>
         </div>
         {/* Chat */}
         <div style={{ flex: 1, overflowY: "auto", padding: "24px 28px 16px" }}>
@@ -534,6 +557,22 @@ After your response, add a brief coaching note in italics starting with "Coach n
               onKeyDown={onKey}
               style={{ flex: 1, background: W, border: flaggedWords.length > 0 ? "1px solid #F59E0B" : `1px solid rgba(13,34,64,0.15)`, borderRadius: 8, color: N, padding: "11px 14px", fontFamily: PF, fontSize: 14, lineHeight: 1.6, resize: "none", outline: "none", minHeight: 46 }}
               placeholder={`Respond to ${scenario?.label}...`} rows={1} />
+            {voice.isMicSupported && (
+              <button onClick={() => {
+                if (voice.isListening) {
+                  voice.stopListening();
+                  const durationSeconds = speechStartRef.current ? (Date.now() - speechStartRef.current) / 1000 : 0;
+                  deliveryReport.recordUtterance(voice.transcript, durationSeconds);
+                } else {
+                  speechStartRef.current = Date.now();
+                  voice.startListening();
+                }
+              }}
+                title={voice.isListening ? "Stop listening" : "Speak your response"}
+                style={{ background: voice.isListening ? "#A33A3A" : W, border: `1px solid ${voice.isListening ? "#A33A3A" : B}`, color: voice.isListening ? W : N, padding: "11px 14px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 15, height: 46, flexShrink: 0, transition: "all 0.15s" }}>
+                {voice.isListening ? "● Stop" : "🎙"}
+              </button>
+            )}
             <button onClick={send} disabled={loading || !input.trim()}
               style={{ background: N, border: "none", color: CR, padding: "11px 20px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500, height: 46, opacity: loading || !input.trim() ? 0.4 : 1, flexShrink: 0, transition: "opacity 0.15s" }}>Send</button>
           </div>
@@ -614,8 +653,41 @@ After your response, add a brief coaching note in italics starting with "Coach n
             <ScoreBar label="Decision Framing" score={debrief.decision} />
             <ScoreBar label="Simplicity & Confidence" score={debrief.simplicity} />
           </>}
+          {deliveryReport.sessionReport && (
+            <div style={{ marginTop: 16, background: W, border: `0.5px solid ${B}`, borderRadius: 10, padding: "14px 16px" }}>
+              <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 12 }}>Delivery report · voice</div>
+              <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 10 }}>
+                <div>
+                  <div style={{ fontFamily: PF, fontSize: 20, color: N, lineHeight: 1 }}>{deliveryReport.sessionReport.avgWpm}<span style={{ fontFamily: SF, fontSize: 10, color: M }}> wpm</span></div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: M, marginTop: 2 }}>
+                    {deliveryReport.sessionReport.paceFlag === "natural" ? "Natural pace" : deliveryReport.sessionReport.paceFlag === "fast" ? "Running fast" : "On the slower side"}
+                  </div>
+                </div>
+                <div>
+                  <div style={{ fontFamily: PF, fontSize: 20, color: N, lineHeight: 1 }}>{deliveryReport.sessionReport.fillersPerTurn}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: M, marginTop: 2 }}>filler words / turn</div>
+                </div>
+              </div>
+              {deliveryReport.sessionReport.topFillers.length > 0 && (
+                <div style={{ display: "flex", flexWrap: "wrap", gap: 5, marginBottom: 10 }}>
+                  {deliveryReport.sessionReport.topFillers.map(f => (
+                    <span key={f.term} style={{ fontFamily: SF, fontSize: 10, color: BRL, background: "#FAEEDA", padding: "2px 8px", borderRadius: 9 }}>
+                      "{f.term}" × {f.count}
+                    </span>
+                  ))}
+                </div>
+              )}
+              <div style={{ fontFamily: SF, fontSize: 11, color: N, lineHeight: 1.5, borderTop: `0.5px solid ${B}`, paddingTop: 10 }}>
+                {deliveryReport.sessionReport.ramblingCount > 0
+                  ? `${deliveryReport.sessionReport.ramblingCount} of ${deliveryReport.sessionReport.turnCount} spoken turns ran long — look for the single strongest Stat-Then-Meaning line instead.`
+                  : deliveryReport.sessionReport.conciseCount === deliveryReport.sessionReport.turnCount
+                  ? "Every spoken turn was concise. That discipline is exactly what the Toolkit asks for."
+                  : "Response length looked reasonable across this session."}
+              </div>
+            </div>
+          )}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
-            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); setScreen("practice"); }}
+            <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); deliveryReport.resetSession(); setScreen("practice"); }}
               style={{ background: CS, border: `1px solid rgba(13,34,64,0.15)`, color: N, padding: "10px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>Try again</button>
             <button onClick={goHome}
               style={{ background: N, border: "none", color: CR, padding: "10px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>← New scenario</button>
