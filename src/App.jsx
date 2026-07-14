@@ -271,12 +271,6 @@ export default function App() {
   useEffect(() => {
     if (taRef.current) { taRef.current.style.height = "auto"; taRef.current.style.height = Math.min(taRef.current.scrollHeight, 140) + "px"; }
   }, [input]);
-  // Read the character's line aloud only when the person has explicitly switched to Voice mode.
-  useEffect(() => {
-    if (practiceMode !== "voice") return;
-    const last = messages[messages.length - 1];
-    if (last?.role === "assistant") voice.speak(last.content);
-  }, [messages, practiceMode]);
   // Feed live speech transcript into the existing input state — voice mode only.
   useEffect(() => {
     if (practiceMode === "voice" && voice.transcript) { setInput(voice.transcript); setFlaggedWords(checkLanguage(voice.transcript)); }
@@ -538,12 +532,6 @@ After your response, add a brief coaching note in italics starting with "Coach n
                   🎙 Voice
                 </button>
               </div>
-            )}
-            {voice.isSpeaking && (
-              <button onClick={voice.stopSpeaking}
-                style={{ display: "flex", alignItems: "center", gap: 5, background: "transparent", border: `1px solid ${BR}`, color: BRL, padding: "4px 10px", borderRadius: 12, cursor: "pointer", fontFamily: SF, fontSize: 11 }}>
-                🔊 Speaking… tap to stop
-              </button>
             )}
             <span style={{ fontFamily: SF, fontSize: 12, color: M, fontVariantNumeric: "tabular-nums" }}>{fmtTime(elapsed)}</span>
           </div>
