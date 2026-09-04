@@ -317,6 +317,15 @@ export default function App() {
   const [refInput, setRefInput] = useState("");
   const [refMessages, setRefMessages] = useState([]);
   const [refLoading, setRefLoading] = useState(false);
+  const [storySelectionRound, setStorySelectionRound] = useState(null);
+  const [storySelectionChoice, setStorySelectionChoice] = useState(null);
+  const [storySelectionFeedback, setStorySelectionFeedback] = useState(null);
+  const [storySelectionLoading, setStorySelectionLoading] = useState(false);
+  const [recallStory, setRecallStory] = useState(null);
+  const [recallPhase, setRecallPhase] = useState("study");
+  const [recallInput, setRecallInput] = useState("");
+  const [recallResult, setRecallResult] = useState(null);
+  const [recallLoading, setRecallLoading] = useState(false);
   const endRef = useRef(null);
   const taRef = useRef(null);
   const refEndRef = useRef(null);
@@ -464,6 +473,77 @@ After your response, add a brief coaching note in italics starting with "Coach n
     return r.json();
   };
 
+  // ── Storytelling: Mode 1, Selection ────────────────────────────
+  const pickRandom = (arr) => arr[Math.floor(Math.random() * arr.length)];
+
+  const startSelectionRound = () => {
+    const objections = content.objections || [];
+    const stories = content.stories || [];
+    if (!objections.length || stories.length < 2) return;
+    const objection = pickRandom(objections);
+    const options = [...stories].sort(() => Math.random() - 0.5).slice(0, Math.min(4, stories.length));
+    setStorySelectionRound({ objection, options });
+    setStorySelectionChoice(null);
+    setStorySelectionFeedback(null);
+  };
+
+  const submitSelection = async (story) => {
+    if (storySelectionLoading) return;
+    setStorySelectionChoice(story.id);
+    setStorySelectionLoading(true);
+    const sys = LIVE_FG + `
+
+=== YOUR ROLE: STORY SELECTION JUDGE ===
+A leader is practicing which story to reach for against a given objection. Using the Story Library and Objection Bank above, judge whether the story they picked is the most appropriate choice. Respond in exactly one sentence — direct, specific, and naming the better fit if their pick was wrong. No preamble.`;
+    const prompt = `OBJECTION: "${storySelectionRound.objection.objection}"\nLEADER PICKED: ${story.name}\nWhen this story is meant to be used: ${story.whenToUse}`;
+    try {
+      const data = await callAPI([{ role: "user", content: prompt }], sys);
+      setStorySelectionFeedback(data.content?.[0]?.text?.trim() || "No feedback returned.");
+    } catch { setStorySelectionFeedback("Connection error. Please try again."); }
+    setStorySelectionLoading(false);
+  };
+
+  // ── Storytelling: Mode 3, Recall ───────────────────────────────
+  const startRecall = (story) => {
+    setRecallStory(story); setRecallPhase("study"); setRecallInput(""); setRecallResult(null);
+  };
+
+  const submitRecall = async () => {
+    if (!recallInput.trim() || recallLoading) return;
+    setRecallLoading(true);
+    const sys = `The leader is reciting a story from memory. Compare their delivery to the reference story below. Score only two things: is the human detail present (the specific person and moment), and is the proof point present (the specific number or outcome). Exact wording does not matter — paraphrase is fine.
+
+REFERENCE STORY: ${recallStory.name}
+60-second version: ${recallStory.summary}
+Required elements (must hit all): ${recallStory.requiredElements}
+Punchline / what it teaches: ${recallStory.punchline}
+
+Respond in EXACTLY this format, one line per field:
+---RECALL---
+HUMAN_DETAIL_PRESENT:[yes|no]
+HUMAN_DETAIL_NOTE:[one sentence]
+PROOF_POINT_PRESENT:[yes|no]
+PROOF_POINT_NOTE:[one sentence]
+CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — leave blank if nothing is missing]
+---END_RECALL---`;
+    try {
+      const data = await callAPI([{ role: "user", content: recallInput.trim() }], sys);
+      const text = data.content?.[0]?.text || "";
+      const m = text.match(/---RECALL---([\s\S]*?)---END_RECALL---/);
+      const b = m ? m[1] : "";
+      const get = (k) => { const r = b.match(new RegExp(k + ":([^\n]*)(?:\n|$)")); return r ? r[1].trim() : ""; };
+      setRecallResult({
+        humanDetailPresent: get("HUMAN_DETAIL_PRESENT").toLowerCase() === "yes",
+        humanDetailNote: get("HUMAN_DETAIL_NOTE"),
+        proofPointPresent: get("PROOF_POINT_PRESENT").toLowerCase() === "yes",
+        proofPointNote: get("PROOF_POINT_NOTE"),
+        correctiveQuote: get("CORRECTIVE_QUOTE"),
+      });
+      setRecallPhase("result");
+    } catch { alert("Error scoring your recall. Please try again."); }
+    setRecallLoading(false);
+  };
+
   const pickScenario = (cat, sc) => {
     setCategory(cat); setScenario(sc);
     setMessages([{ role: "assistant", content: sc.opener }]);
@@ -520,7 +600,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
 
   const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
   const onRefKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendRef(); } };
-  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); };
+  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); setStorySelectionRound(null); setStorySelectionChoice(null); setStorySelectionFeedback(null); setRecallStory(null); setRecallPhase("study"); setRecallInput(""); setRecallResult(null); };
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   // ── HOME ──────────────────────────────────────────────────────
@@ -559,6 +639,7 @@ After your response, add a brief coaching note in italics starting with "Coach n
         {[
           { screen: "reference", icon: "📖", title: "Field Guide reference", badge: "Quick lookup", desc: "Look up exact language, objection responses, stories, and the Credibility Stack." },
           { screen: "flipscript", icon: "🔄", title: "Flip the Script", badge: "Role reversal", desc: "You ask the hard question — the simulator shows you exactly how an expert would answer it." },
+          { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "3 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
         ].map(tool => (
           <div key={tool.screen} onClick={() => setScreen(tool.screen)}
             style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, transition: "all 0.15s" }}
@@ -941,6 +1022,201 @@ After your response, add a brief coaching note in italics starting with "Coach n
       </div>
     </div>
   );
+
+  // ── STORYTELLING: MENU ───────────────────────────────────────────
+  if (screen === "storytelling") return (
+    <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+      <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
+      <TopBar sub="Storytelling Practice" showBack onBack={goHome} lastFetched={content.lastFetched} />
+      <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Three ways to practice.</h2>
+        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Pick the right story, place it at the right moment, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
+
+        <div onClick={() => { startSelectionRound(); setScreen("storytelling-selection"); }}
+          style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 10px rgba(13,34,64,0.08)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.12)"; e.currentTarget.style.boxShadow = "none"; }}>
+          <div style={{ width: 38, height: 38, borderRadius: 9, background: CS, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>🎯</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Selection</span>
+              <span style={{ fontFamily: SF, fontSize: 10, background: CS, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Mode 1</span>
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Given an objection, choose the story that fits — get immediate feedback on your pick.</div>
+          </div>
+          <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
+        </div>
+
+        <div style={{ background: CS, border: `1px solid rgba(13,34,64,0.08)`, borderRadius: 10, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, opacity: 0.6 }}>
+          <div style={{ width: 38, height: 38, borderRadius: 9, background: W, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>⏱️</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Placement</span>
+              <span style={{ fontFamily: SF, fontSize: 10, background: W, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Coming next</span>
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Timing inside a live conversation — too early, too late, or well-landed. Integrates directly into Practice sessions.</div>
+          </div>
+        </div>
+
+        <div onClick={() => setScreen("storytelling-recall")}
+          style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 10px rgba(13,34,64,0.08)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.12)"; e.currentTarget.style.boxShadow = "none"; }}>
+          <div style={{ width: 38, height: 38, borderRadius: 9, background: CS, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>🧠</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Recall</span>
+              <span style={{ fontFamily: SF, fontSize: 10, background: CS, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Mode 3</span>
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Study a story, then deliver it from memory. Scored on whether the human detail and the proof point survive.</div>
+          </div>
+          <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // ── STORYTELLING: SELECTION ──────────────────────────────────────
+  if (screen === "storytelling-selection") {
+    const stories = content.stories || [];
+    const objections = content.objections || [];
+    if (!objections.length || stories.length < 2) return (
+      <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+        <TopBar sub="Storytelling · Selection" showBack onBack={goHome} lastFetched={content.lastFetched} />
+        <div style={{ padding: "3rem", fontFamily: SF, fontSize: 13, color: M }}>Not enough stories or objections loaded yet from the content source to run this mode.</div>
+      </div>
+    );
+    return (
+      <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+        <style>{`* { box-sizing:border-box; margin:0; padding:0; } @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+        <TopBar sub="Storytelling · Selection" showBack onBack={goHome} lastFetched={content.lastFetched} />
+        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+          <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 10, fontWeight: 500 }}>The objection</div>
+          <div style={{ background: N, borderRadius: 10, padding: "18px 20px", marginBottom: "1.75rem" }}>
+            <div style={{ fontFamily: PF, fontSize: 16, lineHeight: 1.6, color: CR, fontStyle: "italic" }}>"{storySelectionRound?.objection.objection}"</div>
+          </div>
+
+          <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: M, marginBottom: 12, fontWeight: 500 }}>Which story do you reach for?</div>
+          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: "1.5rem" }}>
+            {storySelectionRound?.options.map(story => {
+              const chosen = storySelectionChoice === story.id;
+              return (
+                <div key={story.id} onClick={() => !storySelectionChoice && submitSelection(story)}
+                  style={{ background: chosen ? CS : W, border: chosen ? `1.5px solid ${BR}` : `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "14px 16px", cursor: storySelectionChoice ? "default" : "pointer", opacity: storySelectionChoice && !chosen ? 0.5 : 1, transition: "all 0.15s" }}>
+                  <div style={{ fontFamily: PF, fontSize: 13, fontWeight: 500, color: N, marginBottom: 4 }}>{story.name}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.5 }}>{story.whenToUse}</div>
+                </div>
+              );
+            })}
+          </div>
+
+          {storySelectionLoading && (
+            <div style={{ display: "flex", gap: 4, marginBottom: 20 }}>
+              {[0, 0.2, 0.4].map((d, i) => <span key={i} style={{ display: "inline-block", width: 6, height: 6, borderRadius: "50%", background: BR, animation: "pulse 1.2s ease-in-out infinite", animationDelay: d + "s" }} />)}
+            </div>
+          )}
+
+          {storySelectionFeedback && (
+            <div style={{ background: W, border: `1px solid ${B}`, borderRadius: 10, padding: "16px 18px", marginBottom: 16 }}>
+              <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: BR, fontWeight: 500, marginBottom: 8 }}>Coach note</div>
+              <div style={{ fontFamily: PF, fontSize: 13, lineHeight: 1.7, color: N, fontStyle: "italic" }}>{storySelectionFeedback}</div>
+            </div>
+          )}
+
+          {storySelectionFeedback && (
+            <button onClick={() => startSelectionRound()}
+              style={{ background: N, border: "none", color: CR, padding: "10px 20px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>Next objection →</button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── STORYTELLING: RECALL ─────────────────────────────────────────
+  if (screen === "storytelling-recall") {
+    const stories = content.stories || [];
+    if (!recallStory) return (
+      <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+        <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
+        <TopBar sub="Storytelling · Recall" showBack onBack={goHome} lastFetched={content.lastFetched} />
+        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+          <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 8, fontWeight: 500 }}>Choose a story</div>
+          <h2 style={{ fontFamily: PF, fontSize: 22, fontWeight: 400, color: N, marginBottom: "1.5rem" }}>You'll study it, then tell it from memory.</h2>
+          <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
+            {stories.map(story => (
+              <div key={story.id} onClick={() => startRecall(story)}
+                style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "14px 18px", cursor: "pointer", transition: "all 0.15s" }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = N; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.12)"; }}>
+                <div style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N, marginBottom: 4 }}>{story.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.5 }}>{story.whenToUse}</div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    );
+
+    return (
+      <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+        <style>{`* { box-sizing:border-box; margin:0; padding:0; } @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
+        <TopBar sub={`Storytelling · Recall · ${recallStory.name}`} showBack onBack={() => setRecallStory(null)} lastFetched={content.lastFetched} />
+        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 700, margin: "0 auto", width: "100%" }}>
+
+          {recallPhase === "study" && (<>
+            <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 10, fontWeight: 500 }}>Study this — you won't see it again</div>
+            <div style={{ background: W, border: `1px solid ${B}`, borderRadius: 10, padding: "20px 22px", marginBottom: "1.5rem" }}>
+              <div style={{ fontFamily: PF, fontSize: 14, lineHeight: 1.8, color: N, fontStyle: "italic" }}>{recallStory.summary}</div>
+            </div>
+            <button onClick={() => setRecallPhase("recite")}
+              style={{ background: N, border: "none", color: CR, padding: "11px 22px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500 }}>I'm ready — hide it</button>
+          </>)}
+
+          {recallPhase === "recite" && (<>
+            <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 10, fontWeight: 500 }}>Tell it from memory</div>
+            <textarea value={recallInput} onChange={e => setRecallInput(e.target.value)}
+              placeholder="Type the story as you'd tell it out loud..."
+              style={{ width: "100%", minHeight: 180, background: W, border: `1px solid rgba(13,34,64,0.15)`, borderRadius: 10, color: N, padding: "16px 18px", fontFamily: PF, fontSize: 14, lineHeight: 1.7, outline: "none", resize: "vertical", marginBottom: 14 }} />
+            <button onClick={submitRecall} disabled={!recallInput.trim() || recallLoading}
+              style={{ background: N, border: "none", color: CR, padding: "11px 22px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 13, fontWeight: 500, opacity: !recallInput.trim() || recallLoading ? 0.4 : 1 }}>
+              {recallLoading ? "Scoring..." : "Submit"}
+            </button>
+          </>)}
+
+          {recallPhase === "result" && recallResult && (<>
+            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: "1.5rem" }}>
+              <div style={{ background: W, border: `1px solid ${B}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>{recallResult.humanDetailPresent ? "✅" : "❌"}</span>
+                  <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: N }}>Human detail</span>
+                </div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.5 }}>{recallResult.humanDetailNote}</div>
+              </div>
+              <div style={{ background: W, border: `1px solid ${B}`, borderRadius: 10, padding: "14px 16px" }}>
+                <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 6 }}>
+                  <span style={{ fontSize: 14 }}>{recallResult.proofPointPresent ? "✅" : "❌"}</span>
+                  <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: N }}>Proof point</span>
+                </div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.5 }}>{recallResult.proofPointNote}</div>
+              </div>
+            </div>
+            {recallResult.correctiveQuote && (
+              <div style={{ background: N, borderRadius: 10, padding: "16px 18px", marginBottom: "1.5rem" }}>
+                <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: BR, fontWeight: 500, marginBottom: 8 }}>To fill the gap</div>
+                <div style={{ fontFamily: PF, fontSize: 13, lineHeight: 1.75, color: CR, fontStyle: "italic" }}>"{recallResult.correctiveQuote}"</div>
+              </div>
+            )}
+            <div style={{ display: "flex", gap: 8 }}>
+              <button onClick={() => startRecall(recallStory)}
+                style={{ background: CS, border: `1px solid rgba(13,34,64,0.15)`, color: N, padding: "10px 18px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>Try again</button>
+              <button onClick={() => setRecallStory(null)}
+                style={{ background: N, border: "none", color: CR, padding: "10px 18px", borderRadius: 8, cursor: "pointer", fontFamily: SF, fontSize: 12, fontWeight: 500 }}>Choose another story</button>
+            </div>
+          </>)}
+        </div>
+      </div>
+    );
+  }
 
   return null;
 }
