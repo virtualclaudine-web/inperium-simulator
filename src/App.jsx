@@ -166,6 +166,9 @@ const EXAMPLE_QUESTIONS = [
   "Walk me through the Credibility Stack sequence step by step.",
 ];
 
+const TONE_CHIPS = ["Anxious", "Defensive", "Skeptical", "Hostile", "Resigned", "Dismissive", "Overwhelmed", "Curious"];
+
+
 const STATUS_ORDER = ["Out of Formation", "Holding Position", "Closing the Gap", "Within One Inch"];
 const capStatus = (current, cap) =>
   STATUS_ORDER[Math.min(STATUS_ORDER.indexOf(current), STATUS_ORDER.indexOf(cap))];
@@ -317,6 +320,7 @@ export default function App() {
   const [refInput, setRefInput] = useState("");
   const [refMessages, setRefMessages] = useState([]);
   const [refLoading, setRefLoading] = useState(false);
+  const [selectedTone, setSelectedTone] = useState(null);
   const [storySelectionRound, setStorySelectionRound] = useState(null);
   const [storySelectionChoice, setStorySelectionChoice] = useState(null);
   const [storySelectionFeedback, setStorySelectionFeedback] = useState(null);
@@ -429,6 +433,7 @@ Answer questions about the Inperium Communications Field Guide accurately and co
 
 === YOUR ROLE: INPERIUM EXPERT LEADER ===
 The user is playing a skeptic, prospect, board member, donor, or other challenging counterpart. Respond as a highly skilled, trained Inperium leader — calm, confident, grounded in the Field Guide. Use exact frameworks: lead with proof not explanation, follow the Credibility Stack, use the right story, deploy the Stat-Then-Meaning rule, use correct Words That Work language.
+If the question includes a tone or emotional cue — a bracketed tag, or a stage direction like *(asked in an anxious tone)* — let it shape how you respond: de-escalate real anxiety, hold your ground against hostility, slow down for someone who's overwhelmed — without ever losing the calm, grounded register. Don't just answer the words; answer the person. Never mention or explain the tone tag itself in your response.
 After your response, add a brief coaching note in italics starting with "Coach note:" explaining which framework you used and why.`;
 
   // Loading screen
@@ -591,7 +596,8 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
   const sendRef = async (q) => {
     const query = q || refInput.trim();
     if (!query || refLoading) return;
-    const newMsgs = [...refMessages, { role: "user", content: query }];
+    const toned = (screen === "flipscript" && selectedTone) ? `*(asked in a ${selectedTone.toLowerCase()} tone)* ${query}` : query;
+    const newMsgs = [...refMessages, { role: "user", content: toned }];
     setRefMessages(newMsgs); setRefInput(""); setRefLoading(true);
     const sys = screen === "flipscript" ? FLIPSCRIPT_SYS : REFERENCE_SYS;
     try {
@@ -603,7 +609,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
 
   const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
   const onRefKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendRef(); } };
-  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); setStorySelectionRound(null); setStorySelectionChoice(null); setStorySelectionFeedback(null); setRecallStory(null); setRecallPhase("study"); setRecallInput(""); setRecallResult(null); };
+  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); setSelectedTone(null); setStorySelectionRound(null); setStorySelectionChoice(null); setStorySelectionFeedback(null); setRecallStory(null); setRecallPhase("study"); setRecallInput(""); setRecallResult(null); };
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   // ── HOME ──────────────────────────────────────────────────────
@@ -1019,6 +1025,18 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
           </div>
         )}
         <div style={{ borderTop: `1px solid ${B}`, padding: "12px 3rem 20px", background: CR, flexShrink: 0 }}>
+          <div style={{ display: "flex", flexWrap: "wrap", gap: 6, alignItems: "center", marginBottom: 10 }}>
+            <span style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginRight: 2 }}>Tone</span>
+            {TONE_CHIPS.map(tone => {
+              const active = selectedTone === tone;
+              return (
+                <button key={tone} onClick={() => setSelectedTone(active ? null : tone)}
+                  style={{ background: active ? BR : W, border: `1px solid ${active ? BR : "rgba(13,34,64,0.15)"}`, color: active ? W : M, padding: "4px 12px", borderRadius: 20, fontFamily: SF, fontSize: 11, fontWeight: 500, cursor: "pointer", transition: "all 0.15s" }}>
+                  {tone}
+                </button>
+              );
+            })}
+          </div>
           <div style={{ display: "flex", gap: 8, alignItems: "center" }}>
             <input value={refInput} onChange={e => setRefInput(e.target.value)} onKeyDown={onRefKey}
               style={{ flex: 1, background: W, border: `1px solid rgba(13,34,64,0.15)`, borderRadius: 8, color: N, padding: "11px 14px", fontFamily: PF, fontSize: 14, outline: "none", height: 46 }}
