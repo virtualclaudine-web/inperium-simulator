@@ -166,20 +166,82 @@ const EXAMPLE_QUESTIONS = [
   "Walk me through the Credibility Stack sequence step by step.",
 ];
 
-function parseDebrief(text) {
+const STATUS_ORDER = ["Out of Formation", "Holding Position", "Closing the Gap", "Within One Inch"];
+const capStatus = (current, cap) =>
+  STATUS_ORDER[Math.min(STATUS_ORDER.indexOf(current), STATUS_ORDER.indexOf(cap))];
+
+const FEEDBACK_PRIORITY = ["boundary", "decision", "aspiration", "constraint", "simplicity"];
+
+const DIM_FIELD_PREFIX = {
+  aspiration: "ASPIRATION",
+  constraint: "CONSTRAINT",
+  decision: "DECISION",
+  simplicity: "SIMPLICITY",
+  boundary: "BOUNDARY",
+};
+
+const DIM_LABEL = {
+  aspiration: "Aspiration Clarity",
+  constraint: "Constraint Discovery",
+  decision: "Decision Framing",
+  simplicity: "Simplicity & Confidence",
+  boundary: "Boundary Awareness",
+};
+
+function parseDebrief(text, languageScan) {
   const m = text.match(/---DEBRIEF---([\s\S]*?)---END_DEBRIEF---/);
   if (!m) return null;
   const b = m[1];
-  const get = (k) => { const r = b.match(new RegExp(k + ":([^\n]*)(?:\n|$)")); return r ? r[1].trim() : null; };
+  const get = (k) => { const r = b.match(new RegExp(k + ":([^\n]*)(?:\n|$)")); return r ? r[1].trim() : ""; };
+
+  const dimensions = {};
+  for (const [key, prefix] of Object.entries(DIM_FIELD_PREFIX)) {
+    dimensions[key] = {
+      score: Math.max(0, Math.min(3, parseInt(get(`${prefix}_SCORE`)) || 0)),
+      tier: get(`${prefix}_TIER`),
+      evidence: get(`${prefix}_EVIDENCE`),
+      cost: get(`${prefix}_COST`),
+      oneInch: get(`${prefix}_ONEINCH`),
+    };
+  }
+
+  const rawTotal = Object.values(dimensions).reduce((sum, d) => sum + d.score, 0);
+
+  let status =
+    rawTotal >= 13 ? "Within One Inch" :
+    rawTotal >= 10 ? "Closing the Gap" :
+    rawTotal >= 6  ? "Holding Position" : "Out of Formation";
+
+  let hardCapApplied = null;
+  if (dimensions.boundary.score === 0) {
+    status = capStatus(status, "Holding Position");
+    hardCapApplied = "boundary_awareness_zero";
+  }
+  if (languageScan?.fired) {
+    status = capStatus(status, "Closing the Gap");
+    hardCapApplied = hardCapApplied || "language_scan_fired";
+  }
+
+  // Lowest score wins the feedback slot; ties broken by fixed priority order
+  let feedbackKey = FEEDBACK_PRIORITY[0];
+  for (const key of FEEDBACK_PRIORITY) {
+    if (dimensions[key].score < dimensions[feedbackKey].score) feedbackKey = key;
+  }
+
+  // Strongest dimension for the score tile (highest score, same priority order for ties)
+  let strongestKey = FEEDBACK_PRIORITY[0];
+  for (const key of FEEDBACK_PRIORITY) {
+    if (dimensions[key].score > dimensions[strongestKey].score) strongestKey = key;
+  }
+
   return {
-    score: parseInt(get("SCORE")) || 0,
-    aspiration: parseInt(get("ASPIRATION_CLARITY")) || 0,
-    constraint: parseInt(get("CONSTRAINT_DISCOVERY")) || 0,
-    decision: parseInt(get("DECISION_FRAMING")) || 0,
-    simplicity: parseInt(get("SIMPLICITY_CONFIDENCE")) || 0,
-    strongest: get("STRONGEST") || "",
-    note: get("COACH_NOTE") || "",
-    focus: get("FOCUS") || "",
+    dimensions,
+    rawTotal,
+    status,
+    hardCapApplied,
+    languageScan: languageScan || { fired: false, terms: [] },
+    strongest: DIM_LABEL[strongestKey],
+    feedback: { dimensionKey: feedbackKey, dimensionLabel: DIM_LABEL[feedbackKey], ...dimensions[feedbackKey] },
   };
 }
 
@@ -225,15 +287,15 @@ function TopBar({ sub, showBack, onBack, lastFetched }) {
 }
 
 function ScoreBar({ label, score }) {
-  const color = score === 2 ? N : score === 1 ? BR : "#cc4444";
+  const color = score >= 3 ? N : score >= 2 ? BR : "#cc4444";
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
         <span style={{ fontFamily: SF, fontSize: 12, color: M }}>{label}</span>
-        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: score === 2 ? N : BR }}>{score} / 2</span>
+        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: score >= 3 ? N : BR }}>{score} / 3</span>
       </div>
       <div style={{ height: 3, background: B, borderRadius: 2 }}>
-        <div style={{ height: "100%", width: (score / 2 * 100) + "%", background: color, borderRadius: 2, transition: "width 0.5s ease" }} />
+        <div style={{ height: "100%", width: (score / 3 * 100) + "%", background: color, borderRadius: 2, transition: "width 0.5s ease" }} />
       </div>
     </div>
   );
@@ -283,17 +345,70 @@ export default function App() {
 === YOUR ROLE: PRACTICE SIMULATOR ===
 You are playing a realistic conversation partner. Stay in character throughout — be authentic, push back naturally, respond as that person would.
 Do NOT include scoring or feedback during the conversation. Just respond naturally as the character.
-When the user sends "END_SESSION_GET_FEEDBACK", step out of character and provide:
+When the user sends "END_SESSION_GET_FEEDBACK", step out of character and score the conversation against the Within One Inch Rubric.
+
+Score five dimensions on a 0-3 scale. For each dimension you must quote the leader's own words as evidence — a score with no evidence is invalid, do not output one. Also write a "cost" (the specific consequence in this conversation, quoting the leader's own words) and a "one-inch" corrective sentence (what they could have said instead) for EVERY dimension, not just the weakest one — the application decides which single dimension to surface.
+
+DIMENSIONS:
+
+1. Aspiration Clarity — Did the leader find out what the counterpart actually wants?
+   0 Out of Formation: Counterpart's goal never identified.
+   1 Holding Position: A general interest identified, not specific.
+   2 Closing the Gap: Goal identified, never stated back to the counterpart.
+   3 Within One Inch: Goal stated back in the counterpart's own language, and the counterpart confirmed it.
+
+2. Constraint Discovery — Did the leader find the real barrier?
+   0 Out of Formation: No barrier surfaced.
+   1 Holding Position: A constraint was mentioned and left where it landed.
+   2 Closing the Gap: A stated constraint was explored, not gotten beneath.
+   3 Within One Inch: The real barrier beneath the stated one (financial, political, personal, institutional) was surfaced and named.
+
+3. Decision Framing — Did the conversation move something?
+   0 Out of Formation: No next decision named.
+   1 Holding Position: A vague next step mentioned ("we'll follow up").
+   2 Closing the Gap: A next step named but not confirmed, or missing a date or owner.
+   3 Within One Inch: The next decision named explicitly, confirmed by the counterpart, with an owner and a date.
+
+4. Simplicity and Confidence — Could the counterpart repeat it back?
+   0 Out of Formation: Jargon, over-explanation, defensiveness, or an uncertain tone.
+   1 Holding Position: Clear but generic. Accurate and forgettable.
+   2 Closing the Gap: Clear and specific, but not tied to what this counterpart said they cared about.
+   3 Within One Inch: The role explained in two sentences, no jargon, tied directly to the counterpart's stated aspiration.
+
+5. Boundary Awareness — Did the leader know the edge of their own authority?
+   0 Out of Formation: The leader answered a question outside their lane, confidently, whether or not the answer was correct.
+   1 Holding Position: Stayed inside their lane by accident. The hard question never came, or was deflected without recognizing why.
+   2 Closing the Gap: Recognized a question was above their altitude and said so, but the handoff was awkward, apologetic, or left the counterpart without a next step.
+   3 Within One Inch: Named the limit cleanly, without apology, and handed off with a specific person and a specific next step.
+
+Respond in EXACTLY this format. Keep every field on a single line, no line breaks inside a field:
 
 ---DEBRIEF---
-SCORE:[total out of 8]
-ASPIRATION_CLARITY:[0-2]
-CONSTRAINT_DISCOVERY:[0-2]
-DECISION_FRAMING:[0-2]
-SIMPLICITY_CONFIDENCE:[0-2]
-STRONGEST:[name of strongest dimension]
-COACH_NOTE:[2-3 sentences of specific, actionable coaching tied to the Field Guide]
-FOCUS:[one specific thing to work on next time, one sentence]
+ASPIRATION_SCORE:[0-3]
+ASPIRATION_TIER:[Out of Formation|Holding Position|Closing the Gap|Within One Inch]
+ASPIRATION_EVIDENCE:[direct quote from the leader]
+ASPIRATION_COST:[specific consequence in this conversation, quoting the leader]
+ASPIRATION_ONEINCH:[the corrective sentence they could have said instead]
+CONSTRAINT_SCORE:[0-3]
+CONSTRAINT_TIER:[tier name]
+CONSTRAINT_EVIDENCE:[direct quote]
+CONSTRAINT_COST:[specific consequence]
+CONSTRAINT_ONEINCH:[corrective sentence]
+DECISION_SCORE:[0-3]
+DECISION_TIER:[tier name]
+DECISION_EVIDENCE:[direct quote]
+DECISION_COST:[specific consequence]
+DECISION_ONEINCH:[corrective sentence]
+SIMPLICITY_SCORE:[0-3]
+SIMPLICITY_TIER:[tier name]
+SIMPLICITY_EVIDENCE:[direct quote]
+SIMPLICITY_COST:[specific consequence]
+SIMPLICITY_ONEINCH:[corrective sentence]
+BOUNDARY_SCORE:[0-3]
+BOUNDARY_TIER:[tier name]
+BOUNDARY_EVIDENCE:[direct quote]
+BOUNDARY_COST:[specific consequence]
+BOUNDARY_ONEINCH:[corrective sentence]
 ---END_DEBRIEF---`;
 
   const REFERENCE_SYS = LIVE_FG + `
@@ -325,6 +440,19 @@ After your response, add a brief coaching note in italics starting with "Coach n
     if (!content.languageGuide) return [];
     const lower = text.toLowerCase();
     return content.languageGuide.prohibited.filter(({ word }) => lower.includes(word.toLowerCase()));
+  };
+
+  // End-of-session scan across the full transcript, strict word-boundary match.
+  // Feeds the rubric's hard cap — separate from the as-you-type warning above.
+  const scanTranscriptForLanguage = (msgs) => {
+    if (!content.languageGuide) return { fired: false, terms: [] };
+    const fullText = msgs.filter(m => m.role === "user").map(m => m.content).join(" ").toLowerCase();
+    const hits = content.languageGuide.prohibited.filter(({ word }) => {
+      const escaped = word.toLowerCase().replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&");
+      const re = new RegExp(`\\b${escaped}\\b`);
+      return re.test(fullText);
+    });
+    return { fired: hits.length > 0, terms: hits.map(h => h.word) };
   };
 
   const callAPI = async (msgs, sys) => {
@@ -370,7 +498,8 @@ After your response, add a brief coaching note in italics starting with "Coach n
     const sys = PRACTICE_SYS + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
     try {
       const data = await callAPI(allMsgs.map(m => ({ role: m.role, content: m.content })), sys);
-      setDebrief(parseDebrief(data.content?.[0]?.text || ""));
+      const languageScan = scanTranscriptForLanguage(messages); // scan actual user turns, not the trigger message
+      setDebrief(parseDebrief(data.content?.[0]?.text || "", languageScan));
       setScreen("scorecard");
     } catch { alert("Error getting feedback. Please try again."); }
     setLoading(false);
@@ -609,20 +738,35 @@ After your response, add a brief coaching note in italics starting with "Coach n
         {/* Feedback panel */}
         <div style={{ width: 280, flexShrink: 0, overflowY: "auto", padding: "20px 20px" }}>
           {debrief && <>
+            {/* Status badge */}
+            <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
+              <span style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: M, fontWeight: 500 }}>Formation status</span>
+              {debrief.hardCapApplied && (
+                <span style={{ fontFamily: SF, fontSize: 9, color: "#cc4444", fontWeight: 500 }} title={debrief.hardCapApplied === "boundary_awareness_zero" ? "Capped: Boundary Awareness scored 0" : "Capped: prohibited language used"}>Capped</span>
+              )}
+            </div>
+            <div style={{ background: N, borderRadius: 10, padding: "14px 18px", marginBottom: 10 }}>
+              <div style={{ fontFamily: PF, fontSize: 18, fontWeight: 400, color: CR }}>{debrief.status}</div>
+            </div>
+            {debrief.languageScan?.fired && (
+              <div style={{ background: "#FCEBEB", border: "0.5px solid #E8A3A3", borderRadius: 8, padding: "8px 12px", marginBottom: 16, fontFamily: SF, fontSize: 11, color: "#7C1F1F" }}>
+                Flagged: {debrief.languageScan.terms.join(", ")}
+              </div>
+            )}
             {/* Coach note — hero */}
             <div style={{ background: N, borderRadius: 10, padding: "16px 18px", marginBottom: 16 }}>
-              <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: BR, fontWeight: 500, marginBottom: 10 }}>Coach note</div>
-              <div style={{ fontFamily: PF, fontSize: 13, lineHeight: 1.75, color: CR, fontStyle: "italic", marginBottom: 14 }}>{debrief.note}</div>
+              <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: BR, fontWeight: 500, marginBottom: 10 }}>{debrief.feedback.dimensionLabel} — {debrief.feedback.tier}</div>
+              <div style={{ fontFamily: PF, fontSize: 13, lineHeight: 1.75, color: CR, fontStyle: "italic", marginBottom: 14 }}>{debrief.feedback.cost}</div>
               <div style={{ borderTop: "0.5px solid rgba(255,255,255,0.1)", paddingTop: 12 }}>
-                <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>Focus for next time</div>
-                <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>{debrief.focus}</div>
+                <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: "rgba(255,255,255,0.4)", marginBottom: 6 }}>The one inch</div>
+                <div style={{ fontFamily: SF, fontSize: 12, color: "rgba(255,255,255,0.75)", lineHeight: 1.6 }}>{debrief.feedback.oneInch}</div>
               </div>
             </div>
             {/* Score tiles */}
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
               <div style={{ background: W, border: `0.5px solid ${B}`, borderRadius: 8, padding: "10px 12px" }}>
                 <div style={{ fontFamily: SF, fontSize: 10, color: M, marginBottom: 4 }}>Score</div>
-                <div style={{ fontFamily: PF, fontSize: 24, fontWeight: 400, color: N, lineHeight: 1 }}>{debrief.score}<span style={{ fontFamily: SF, fontSize: 11, color: M, fontWeight: 400 }}> / 8</span></div>
+                <div style={{ fontFamily: PF, fontSize: 24, fontWeight: 400, color: N, lineHeight: 1 }}>{debrief.rawTotal}<span style={{ fontFamily: SF, fontSize: 11, color: M, fontWeight: 400 }}> / 15</span></div>
               </div>
               <div style={{ background: W, border: `0.5px solid ${B}`, borderRadius: 8, padding: "10px 12px" }}>
                 <div style={{ fontFamily: SF, fontSize: 10, color: M, marginBottom: 4 }}>Strongest</div>
@@ -631,10 +775,11 @@ After your response, add a brief coaching note in italics starting with "Coach n
             </div>
             {/* Score bars */}
             <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.08em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 12 }}>Score breakdown</div>
-            <ScoreBar label="Aspiration Clarity" score={debrief.aspiration} />
-            <ScoreBar label="Constraint Discovery" score={debrief.constraint} />
-            <ScoreBar label="Decision Framing" score={debrief.decision} />
-            <ScoreBar label="Simplicity & Confidence" score={debrief.simplicity} />
+            <ScoreBar label="Aspiration Clarity" score={debrief.dimensions.aspiration.score} />
+            <ScoreBar label="Constraint Discovery" score={debrief.dimensions.constraint.score} />
+            <ScoreBar label="Decision Framing" score={debrief.dimensions.decision.score} />
+            <ScoreBar label="Simplicity & Confidence" score={debrief.dimensions.simplicity.score} />
+            <ScoreBar label="Boundary Awareness" score={debrief.dimensions.boundary.score} />
           </>}
           <div style={{ display: "flex", flexDirection: "column", gap: 8, marginTop: 16 }}>
             <button onClick={() => { setMessages([{ role: "assistant", content: scenario.opener }]); setExchanges(0); setDebrief(null); setStartTime(Date.now()); setElapsed(0); setScreen("practice"); }}
