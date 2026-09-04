@@ -639,7 +639,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
         {[
           { screen: "reference", icon: "📖", title: "Field Guide reference", badge: "Quick lookup", desc: "Look up exact language, objection responses, stories, and the Credibility Stack." },
           { screen: "flipscript", icon: "🔄", title: "Flip the Script", badge: "Role reversal", desc: "You ask the hard question — the simulator shows you exactly how an expert would answer it." },
-          { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "3 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
+          { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "2 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
         ].map(tool => (
           <div key={tool.screen} onClick={() => setScreen(tool.screen)}
             style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, transition: "all 0.15s" }}
@@ -1029,8 +1029,8 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
       <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
       <TopBar sub="Storytelling Practice" showBack onBack={goHome} lastFetched={content.lastFetched} />
       <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Three ways to practice.</h2>
-        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Pick the right story, place it at the right moment, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
+        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Two ways to practice.</h2>
+        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Pick the right story, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
 
         <div onClick={() => { startSelectionRound(); setScreen("storytelling-selection"); }}
           style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, transition: "all 0.15s" }}
@@ -1045,17 +1045,6 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
             <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Given an objection, choose the story that fits — get immediate feedback on your pick.</div>
           </div>
           <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
-        </div>
-
-        <div style={{ background: CS, border: `1px solid rgba(13,34,64,0.08)`, borderRadius: 10, padding: "16px 18px", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, opacity: 0.6 }}>
-          <div style={{ width: 38, height: 38, borderRadius: 9, background: W, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>⏱️</div>
-          <div style={{ flex: 1 }}>
-            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
-              <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Placement</span>
-              <span style={{ fontFamily: SF, fontSize: 10, background: W, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Coming next</span>
-            </div>
-            <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Timing inside a live conversation — too early, too late, or well-landed. Integrates directly into Practice sessions.</div>
-          </div>
         </div>
 
         <div onClick={() => setScreen("storytelling-recall")}
