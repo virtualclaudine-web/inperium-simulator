@@ -464,11 +464,11 @@ After your response, add a brief coaching note in italics starting with "Coach n
     return { fired: hits.length > 0, terms: hits.map(h => h.word) };
   };
 
-  const callAPI = async (msgs, sys) => {
+  const callAPI = async (msgs, sys, maxTokens = 1000) => {
     const r = await fetch("https://api.anthropic.com/v1/messages", {
       method: "POST",
       headers: { "Content-Type": "application/json", "x-api-key": import.meta.env.VITE_ANTHROPIC_KEY, "anthropic-version": "2023-06-01", "anthropic-dangerous-direct-browser-access": "true" },
-      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: 1000, system: sys, messages: msgs }),
+      body: JSON.stringify({ model: "claude-sonnet-4-6", max_tokens: maxTokens, system: sys, messages: msgs }),
     });
     return r.json();
   };
@@ -577,9 +577,12 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
     const allMsgs = [...messages, { role: "user", content: "END_SESSION_GET_FEEDBACK" }];
     const sys = PRACTICE_SYS + `\n\nSCENARIO: ${scenario.label}\nPERSONA: ${scenario.persona}`;
     try {
-      const data = await callAPI(allMsgs.map(m => ({ role: m.role, content: m.content })), sys);
+      const data = await callAPI(allMsgs.map(m => ({ role: m.role, content: m.content })), sys, 2200);
       const languageScan = scanTranscriptForLanguage(messages); // scan actual user turns, not the trigger message
-      setDebrief(parseDebrief(data.content?.[0]?.text || "", languageScan));
+      const rawText = data.content?.[0]?.text || "";
+      const parsed = parseDebrief(rawText, languageScan);
+      if (!parsed) console.error("Debrief parse failed — raw model output:", rawText);
+      setDebrief(parsed);
       setScreen("scorecard");
     } catch { alert("Error getting feedback. Please try again."); }
     setLoading(false);
@@ -818,6 +821,12 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
         </div>
         {/* Feedback panel */}
         <div style={{ width: 280, flexShrink: 0, overflowY: "auto", padding: "20px 20px" }}>
+          {!debrief && (
+            <div style={{ background: "#FCEBEB", border: "0.5px solid #E8A3A3", borderRadius: 10, padding: "16px 18px", marginBottom: 16 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "#7C1F1F", marginBottom: 6 }}>Couldn't score this session</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: "#7C1F1F", lineHeight: 1.6 }}>The scoring response didn't come back in the expected format. Try running the session again — if it keeps happening, this is worth flagging.</div>
+            </div>
+          )}
           {debrief && <>
             {/* Status badge */}
             <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 }}>
