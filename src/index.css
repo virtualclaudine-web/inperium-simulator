@@ -109,3 +109,33 @@ code {
   padding: 4px 8px;
   background: var(--code-bg);
 }
+
+/* ── Inperium Practice Simulator: mobile responsiveness ── */
+@media (max-width: 640px) {
+  .ip-page {
+    padding: 1.5rem 1.25rem 2rem !important;
+  }
+  .ip-hero-title {
+    font-size: 32px !important;
+  }
+  .ip-hero-sub {
+    font-size: 16px !important;
+  }
+  .ip-cat-grid,
+  .ip-2col-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .ip-scorecard-split {
+    flex-direction: column !important;
+  }
+  .ip-feedback-panel {
+    width: 100% !important;
+    border-right: none !important;
+    border-top: 1px solid rgba(13, 34, 64, 0.1);
+    order: -1;
+  }
+  .ip-transcript-panel {
+    border-right: none !important;
+  }
+}
+

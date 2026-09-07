@@ -659,18 +659,18 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
     <div style={{ minHeight: "100vh", background: CR, color: N, display: "flex", flexDirection: "column" }}>
       <style>{`@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;1,400&family=Inter:wght@400;500&display=swap'); * { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.2);border-radius:2px}`}</style>
       <TopBar showBack={false} lastFetched={content.lastFetched} />
-      <div style={{ flex: 1, padding: "3rem 3rem 2.5rem", maxWidth: 960, margin: "0 auto", width: "100%" }}>
+      <div className="ip-page" style={{ flex: 1, padding: "3rem 3rem 2.5rem", maxWidth: 960, margin: "0 auto", width: "100%" }}>
 
         {/* Hero */}
         <div style={{ textAlign: "center", marginBottom: "3rem" }}>
-          <h1 style={{ fontFamily: PF, fontSize: 48, fontWeight: 400, color: N, lineHeight: 1.15, marginBottom: 10 }}>What do you want<br/>to practice?</h1>
+          <h1 className="ip-hero-title" style={{ fontFamily: PF, fontSize: 48, fontWeight: 400, color: N, lineHeight: 1.15, marginBottom: 10 }}>What do you want<br/>to practice?</h1>
           <p style={{ fontFamily: PF, fontSize: 20, color: BR, fontStyle: "italic", marginBottom: 14, lineHeight: 1.4 }}>Real conversations. Real feedback.</p>
-          <p style={{ fontFamily: SF, fontSize: 14, color: M, lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
+          <p className="ip-hero-sub" style={{ fontFamily: SF, fontSize: 14, color: M, lineHeight: 1.75, maxWidth: 500, margin: "0 auto" }}>Choose a category below. Each session puts you in a real conversation — end it whenever you're ready to see your score and coaching.</p>
         </div>
 
         {/* Categories */}
         <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: N, marginBottom: 14 }}>Practice categories</div>
-        <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 10 }}>
+        <div className="ip-cat-grid" style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: 10, marginBottom: 10 }}>
           {CATEGORIES.map(cat => (
             <div key={cat.id} onClick={() => selectCategory(cat)}
               style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "14px 16px", cursor: "pointer", display: "flex", alignItems: "flex-start", gap: 12, transition: "all 0.15s" }}
@@ -717,7 +717,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
     <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
       <TopBar sub={category?.title} showBack onBack={goHome} lastFetched={content.lastFetched} />
-      <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 820, margin: "0 auto", width: "100%" }}>
+      <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 820, margin: "0 auto", width: "100%" }}>
         <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 8, fontWeight: 500 }}>Choose a scenario</div>
         <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>{category?.title}</h2>
         <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "1.75rem", lineHeight: 1.65 }}>{category?.desc}</p>
@@ -848,9 +848,9 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
         <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>{category?.title} · {scenario?.label}</span>
         <span style={{ fontFamily: SF, fontSize: 12, color: M }}>{exchanges} {exchanges === 1 ? "exchange" : "exchanges"} · {fmtTime(elapsed)}</span>
       </div>
-      <div style={{ flex: 1, display: "flex", overflow: "hidden" }}>
+      <div className="ip-scorecard-split" style={{ flex: 1, display: "flex", overflow: "hidden" }}>
         {/* Transcript */}
-        <div style={{ flex: 1, overflowY: "auto", padding: "20px 24px", borderRight: `1px solid ${B}` }}>
+        <div className="ip-transcript-panel" style={{ flex: 1, overflowY: "auto", padding: "20px 24px", borderRight: `1px solid ${B}`, minWidth: 0 }}>
           <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.1em", textTransform: "uppercase", color: M, fontWeight: 500, marginBottom: 16 }}>Conversation</div>
           {messages.map((m, i) => (
             <div key={i} style={{ marginBottom: 14 }}>
@@ -868,7 +868,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
           ))}
         </div>
         {/* Feedback panel */}
-        <div style={{ width: 280, flexShrink: 0, overflowY: "auto", padding: "20px 20px" }}>
+        <div className="ip-feedback-panel" style={{ width: 280, flexShrink: 0, overflowY: "auto", padding: "20px 20px" }}>
           {!debrief && (
             <div style={{ background: "#FCEBEB", border: "0.5px solid #E8A3A3", borderRadius: 10, padding: "16px 18px", marginBottom: 16 }}>
               <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, color: "#7C1F1F", marginBottom: 6 }}>Couldn't score this session</div>
@@ -1110,7 +1110,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
     <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
       <TopBar sub="Storytelling Practice" showBack onBack={goHome} lastFetched={content.lastFetched} />
-      <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+      <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
         <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Two ways to practice.</h2>
         <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Pick the right story, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
 
@@ -1161,14 +1161,14 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
       <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
         <style>{`* { box-sizing:border-box; margin:0; padding:0; } @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
         <TopBar sub="Storytelling · Selection" showBack onBack={goHome} lastFetched={content.lastFetched} />
-        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+        <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
           <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 10, fontWeight: 500 }}>The objection</div>
           <div style={{ background: N, borderRadius: 10, padding: "18px 20px", marginBottom: "1.75rem" }}>
             <div style={{ fontFamily: PF, fontSize: 16, lineHeight: 1.6, color: CR, fontStyle: "italic" }}>"{storySelectionRound?.objection.objection}"</div>
           </div>
 
           <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: M, marginBottom: 12, fontWeight: 500 }}>Which story do you reach for?</div>
-          <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: "1.5rem" }}>
+          <div className="ip-2col-grid" style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 10, marginBottom: "1.5rem" }}>
             {storySelectionRound?.options.map(story => {
               const chosen = storySelectionChoice === story.id;
               return (
@@ -1210,7 +1210,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
       <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
         <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
         <TopBar sub="Storytelling · Recall" showBack onBack={goHome} lastFetched={content.lastFetched} />
-        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+        <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
           <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 8, fontWeight: 500 }}>Choose a story</div>
           <h2 style={{ fontFamily: PF, fontSize: 22, fontWeight: 400, color: N, marginBottom: "1.5rem" }}>You'll study it, then tell it from memory.</h2>
           <div style={{ display: "flex", flexDirection: "column", gap: 8 }}>
@@ -1232,7 +1232,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
       <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
         <style>{`* { box-sizing:border-box; margin:0; padding:0; } @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
         <TopBar sub={`Storytelling · Recall · ${recallStory.name}`} showBack onBack={() => setRecallStory(null)} lastFetched={content.lastFetched} />
-        <div style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 700, margin: "0 auto", width: "100%" }}>
+        <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 700, margin: "0 auto", width: "100%" }}>
 
           {recallPhase === "study" && (<>
             <div style={{ fontFamily: SF, fontSize: 10, letterSpacing: "0.12em", textTransform: "uppercase", color: BR, marginBottom: 10, fontWeight: 500 }}>Study this — you won't see it again</div>
