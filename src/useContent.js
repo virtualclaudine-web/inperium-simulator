@@ -10,6 +10,7 @@ const LIST_NAMES = {
   stories: "Stories",
   objections: "Objections",
   scenarios: "Scenarios",
+  rubric: "Rubric-Live",
 };
 
 async function getToken() {
@@ -117,6 +118,15 @@ function buildScenarios(rows) {
   }));
 }
 
+function buildRubric(rows) {
+  return rows.filter(r => (r.field_4 === "Live" || r.Status === "Live") && r.Title).map(r => ({
+    category: (r.Title || "").trim(),
+    tier: (r.field_1 || r.Tier || "").trim(),
+    score: parseInt(r.field_2 || r.Score) || 0,
+    description: r.field_3 || r["What It Means"] || "",
+  }));
+}
+
 function buildSystemPrompt(toolkit, fieldGuide, stories, objections) {
   // Full Toolkit is the primary knowledge base — Field Guide adds the quick-reference layer
   let prompt = toolkit + "\n\n" + fieldGuide;
@@ -144,6 +154,7 @@ export function useContent() {
     stories: null,
     objections: null,
     scenarios: null,
+    rubric: null,
     systemPrompt: null,
     lastFetched: null,
   });
@@ -161,6 +172,17 @@ export function useContent() {
           getListItems(token, siteId, LIST_NAMES.objections),
           getListItems(token, siteId, LIST_NAMES.scenarios),
         ]);
+        // Fetched separately: a problem with this newer list (wrong name, still
+        // propagating, permissions) should fall back gracefully, not take down
+        // every other list along with it.
+        let rubric = null;
+        try {
+          const rbRows = await getListItems(token, siteId, LIST_NAMES.rubric);
+          rubric = buildRubric(rbRows);
+          console.log("Rubric-Live rows loaded:", rubric.length, "of", rbRows.length, "raw rows");
+        } catch (rubricErr) {
+          console.error("Rubric-Live fetch failed, falling back to built-in rubric text:", rubricErr);
+        }
         const toolkitText = buildToolkit(tkRows);
         if (tkRows.length > 0) {
           console.log("Toolkit active rows:", tkRows.filter(r => r.field_4 === "Active").length, "of", tkRows.length);
@@ -174,7 +196,7 @@ export function useContent() {
         const systemPrompt = buildSystemPrompt(toolkitText, fieldGuideText, stories, objections);
         setState({
           loading: false, error: null,
-          fieldGuideText, languageGuide, stories, objections, scenarios, systemPrompt,
+          fieldGuideText, languageGuide, stories, objections, scenarios, rubric, systemPrompt,
           lastFetched: new Date(),
         });
       } catch (err) {

@@ -191,6 +191,64 @@ const DIM_LABEL = {
   boundary: "Boundary Awareness",
 };
 
+// Order + subtitle question stay in code (structural, rarely change).
+// Tier text itself comes from the "Rubric-Live" SharePoint list — "category"
+// here must match that list's Category column exactly.
+const DIMENSION_META = [
+  { category: "Aspiration Clarity", question: "Did the leader find out what the counterpart actually wants?" },
+  { category: "Constraint Discovery", question: "Did the leader find the real barrier?" },
+  { category: "Decision Framing", question: "Did the conversation move something?" },
+  { category: "Simplicity and Confidence", question: "Could the counterpart repeat it back?" },
+  { category: "Boundary Awareness", question: "Did the leader know the edge of their own authority?" },
+];
+
+// Used only if the SharePoint list fails to load or comes back incomplete —
+// keeps the grading call working even if content is temporarily unavailable.
+const FALLBACK_DIMENSIONS_TEXT = `1. Aspiration Clarity — Did the leader find out what the counterpart actually wants?
+   1 Out of Formation: Counterpart's goal never identified.
+   2 Holding Position: A general interest identified, not specific.
+   3 Closing the Gap: Goal identified, never stated back to the counterpart.
+   4 Within One Inch: Goal stated back in the counterpart's own language, and the counterpart confirmed it.
+
+2. Constraint Discovery — Did the leader find the real barrier?
+   1 Out of Formation: No barrier surfaced.
+   2 Holding Position: A constraint was mentioned and left where it landed.
+   3 Closing the Gap: A stated constraint was explored, not gotten beneath.
+   4 Within One Inch: The real barrier beneath the stated one (financial, political, personal, institutional) was surfaced and named.
+
+3. Decision Framing — Did the conversation move something?
+   1 Out of Formation: No next decision named.
+   2 Holding Position: A vague next step mentioned ("we'll follow up").
+   3 Closing the Gap: A next step named but not confirmed, or missing a date or owner.
+   4 Within One Inch: The next decision named explicitly, confirmed by the counterpart, with an owner and a date.
+
+4. Simplicity and Confidence — Could the counterpart repeat it back?
+   1 Out of Formation: Jargon, over-explanation, defensiveness, or an uncertain tone.
+   2 Holding Position: Clear but generic. Accurate and forgettable.
+   3 Closing the Gap: Clear and specific, but not tied to what this counterpart said they cared about.
+   4 Within One Inch: The role explained in two sentences, no jargon, tied directly to the counterpart's stated aspiration.
+
+5. Boundary Awareness — Did the leader know the edge of their own authority?
+   1 Out of Formation: The leader answered a question outside their lane, confidently, whether or not the answer was correct.
+   2 Holding Position: Stayed inside their lane by accident. The hard question never came, or was deflected without recognizing why.
+   3 Closing the Gap: Recognized a question was above their altitude and said so, but the handoff was awkward, apologetic, or left the counterpart without a next step.
+   4 Within One Inch: Named the limit cleanly, without apology, and handed off with a specific person and a specific next step.`;
+
+function buildRubricDimensionsText(rubric) {
+  if (!rubric || rubric.length === 0) return FALLBACK_DIMENSIONS_TEXT;
+  const sections = DIMENSION_META.map((dim, i) => {
+    const tiers = rubric.filter(r => r.category.toLowerCase() === dim.category.toLowerCase()).sort((a, b) => a.score - b.score);
+    if (tiers.length !== 4) return null; // incomplete for this dimension -- bail to full fallback below
+    const lines = tiers.map(t => `   ${t.score} ${t.tier}: ${t.description}`).join("\n");
+    return `${i + 1}. ${dim.category} — ${dim.question}\n${lines}`;
+  });
+  if (sections.some(s => s === null)) {
+    console.error("Rubric-Live list is missing tiers for one or more dimensions — using built-in fallback rubric text instead.");
+    return FALLBACK_DIMENSIONS_TEXT;
+  }
+  return sections.join("\n\n");
+}
+
 function parseDebrief(text, languageScan) {
   const m = text.match(/---DEBRIEF---([\s\S]*?)---END_DEBRIEF---/);
   if (!m) return null;
@@ -367,35 +425,7 @@ Score five dimensions on a 1-4 scale. For each dimension you must quote the lead
 
 DIMENSIONS:
 
-1. Aspiration Clarity — Did the leader find out what the counterpart actually wants?
-   1 Out of Formation: Counterpart's goal never identified.
-   2 Holding Position: A general interest identified, not specific.
-   3 Closing the Gap: Goal identified, never stated back to the counterpart.
-   4 Within One Inch: Goal stated back in the counterpart's own language, and the counterpart confirmed it.
-
-2. Constraint Discovery — Did the leader find the real barrier?
-   1 Out of Formation: No barrier surfaced.
-   2 Holding Position: A constraint was mentioned and left where it landed.
-   3 Closing the Gap: A stated constraint was explored, not gotten beneath.
-   4 Within One Inch: The real barrier beneath the stated one (financial, political, personal, institutional) was surfaced and named.
-
-3. Decision Framing — Did the conversation move something?
-   1 Out of Formation: No next decision named.
-   2 Holding Position: A vague next step mentioned ("we'll follow up").
-   3 Closing the Gap: A next step named but not confirmed, or missing a date or owner.
-   4 Within One Inch: The next decision named explicitly, confirmed by the counterpart, with an owner and a date.
-
-4. Simplicity and Confidence — Could the counterpart repeat it back?
-   1 Out of Formation: Jargon, over-explanation, defensiveness, or an uncertain tone.
-   2 Holding Position: Clear but generic. Accurate and forgettable.
-   3 Closing the Gap: Clear and specific, but not tied to what this counterpart said they cared about.
-   4 Within One Inch: The role explained in two sentences, no jargon, tied directly to the counterpart's stated aspiration.
-
-5. Boundary Awareness — Did the leader know the edge of their own authority?
-   1 Out of Formation: The leader answered a question outside their lane, confidently, whether or not the answer was correct.
-   2 Holding Position: Stayed inside their lane by accident. The hard question never came, or was deflected without recognizing why.
-   3 Closing the Gap: Recognized a question was above their altitude and said so, but the handoff was awkward, apologetic, or left the counterpart without a next step.
-   4 Within One Inch: Named the limit cleanly, without apology, and handed off with a specific person and a specific next step.
+${buildRubricDimensionsText(content.rubric)}
 
 Respond in EXACTLY this format. Keep every field on a single line, no line breaks inside a field:
 
