@@ -200,7 +200,7 @@ function parseDebrief(text, languageScan) {
   const dimensions = {};
   for (const [key, prefix] of Object.entries(DIM_FIELD_PREFIX)) {
     dimensions[key] = {
-      score: Math.max(0, Math.min(3, parseInt(get(`${prefix}_SCORE`)) || 0)),
+      score: Math.max(1, Math.min(4, parseInt(get(`${prefix}_SCORE`)) || 1)),
       tier: get(`${prefix}_TIER`),
       evidence: get(`${prefix}_EVIDENCE`),
       cost: get(`${prefix}_COST`),
@@ -210,13 +210,16 @@ function parseDebrief(text, languageScan) {
 
   const rawTotal = Object.values(dimensions).reduce((sum, d) => sum + d.score, 0);
 
+  // 5 dimensions x 1-4 scale: range is 5-20. Bands shifted +5 from the
+  // original 0-15 scale (13-15/10-12/6-9/0-5) to preserve identical
+  // pass/fail behavior on the new numbers.
   let status =
-    rawTotal >= 13 ? "Within One Inch" :
-    rawTotal >= 10 ? "Closing the Gap" :
-    rawTotal >= 6  ? "Holding Position" : "Out of Formation";
+    rawTotal >= 18 ? "Within One Inch" :
+    rawTotal >= 15 ? "Closing the Gap" :
+    rawTotal >= 11 ? "Holding Position" : "Out of Formation";
 
   let hardCapApplied = null;
-  if (dimensions.boundary.score === 0) {
+  if (dimensions.boundary.score === 1) {
     status = capStatus(status, "Holding Position");
     hardCapApplied = "boundary_awareness_zero";
   }
@@ -290,15 +293,15 @@ function TopBar({ sub, showBack, onBack, lastFetched }) {
 }
 
 function ScoreBar({ label, score }) {
-  const color = score >= 3 ? N : score >= 2 ? BR : "#cc4444";
+  const color = score >= 4 ? N : score >= 3 ? BR : "#cc4444";
   return (
     <div style={{ marginBottom: 12 }}>
       <div style={{ display: "flex", justifyContent: "space-between", marginBottom: 4 }}>
         <span style={{ fontFamily: SF, fontSize: 12, color: M }}>{label}</span>
-        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: score >= 3 ? N : BR }}>{score} / 3</span>
+        <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 500, color: score >= 4 ? N : BR }}>{score} / 4</span>
       </div>
       <div style={{ height: 3, background: B, borderRadius: 2 }}>
-        <div style={{ height: "100%", width: (score / 3 * 100) + "%", background: color, borderRadius: 2, transition: "width 0.5s ease" }} />
+        <div style={{ height: "100%", width: (score / 4 * 100) + "%", background: color, borderRadius: 2, transition: "width 0.5s ease" }} />
       </div>
     </div>
   );
@@ -360,64 +363,64 @@ You are playing a realistic conversation partner. Stay in character throughout �
 Do NOT include scoring or feedback during the conversation. Just respond naturally as the character.
 When the user sends "END_SESSION_GET_FEEDBACK", step out of character and score the conversation against the Within One Inch Rubric.
 
-Score five dimensions on a 0-3 scale. For each dimension you must quote the leader's own words as evidence — a score with no evidence is invalid, do not output one. Also write a "cost" (the specific consequence in this conversation, quoting the leader's own words) and a "one-inch" corrective sentence (what they could have said instead) for EVERY dimension, not just the weakest one — the application decides which single dimension to surface.
+Score five dimensions on a 1-4 scale. For each dimension you must quote the leader's own words as evidence — a score with no evidence is invalid, do not output one. Also write a "cost" (the specific consequence in this conversation, quoting the leader's own words) and a "one-inch" corrective sentence (what they could have said instead) for EVERY dimension, not just the weakest one — the application decides which single dimension to surface.
 
 DIMENSIONS:
 
 1. Aspiration Clarity — Did the leader find out what the counterpart actually wants?
-   0 Out of Formation: Counterpart's goal never identified.
-   1 Holding Position: A general interest identified, not specific.
-   2 Closing the Gap: Goal identified, never stated back to the counterpart.
-   3 Within One Inch: Goal stated back in the counterpart's own language, and the counterpart confirmed it.
+   1 Out of Formation: Counterpart's goal never identified.
+   2 Holding Position: A general interest identified, not specific.
+   3 Closing the Gap: Goal identified, never stated back to the counterpart.
+   4 Within One Inch: Goal stated back in the counterpart's own language, and the counterpart confirmed it.
 
 2. Constraint Discovery — Did the leader find the real barrier?
-   0 Out of Formation: No barrier surfaced.
-   1 Holding Position: A constraint was mentioned and left where it landed.
-   2 Closing the Gap: A stated constraint was explored, not gotten beneath.
-   3 Within One Inch: The real barrier beneath the stated one (financial, political, personal, institutional) was surfaced and named.
+   1 Out of Formation: No barrier surfaced.
+   2 Holding Position: A constraint was mentioned and left where it landed.
+   3 Closing the Gap: A stated constraint was explored, not gotten beneath.
+   4 Within One Inch: The real barrier beneath the stated one (financial, political, personal, institutional) was surfaced and named.
 
 3. Decision Framing — Did the conversation move something?
-   0 Out of Formation: No next decision named.
-   1 Holding Position: A vague next step mentioned ("we'll follow up").
-   2 Closing the Gap: A next step named but not confirmed, or missing a date or owner.
-   3 Within One Inch: The next decision named explicitly, confirmed by the counterpart, with an owner and a date.
+   1 Out of Formation: No next decision named.
+   2 Holding Position: A vague next step mentioned ("we'll follow up").
+   3 Closing the Gap: A next step named but not confirmed, or missing a date or owner.
+   4 Within One Inch: The next decision named explicitly, confirmed by the counterpart, with an owner and a date.
 
 4. Simplicity and Confidence — Could the counterpart repeat it back?
-   0 Out of Formation: Jargon, over-explanation, defensiveness, or an uncertain tone.
-   1 Holding Position: Clear but generic. Accurate and forgettable.
-   2 Closing the Gap: Clear and specific, but not tied to what this counterpart said they cared about.
-   3 Within One Inch: The role explained in two sentences, no jargon, tied directly to the counterpart's stated aspiration.
+   1 Out of Formation: Jargon, over-explanation, defensiveness, or an uncertain tone.
+   2 Holding Position: Clear but generic. Accurate and forgettable.
+   3 Closing the Gap: Clear and specific, but not tied to what this counterpart said they cared about.
+   4 Within One Inch: The role explained in two sentences, no jargon, tied directly to the counterpart's stated aspiration.
 
 5. Boundary Awareness — Did the leader know the edge of their own authority?
-   0 Out of Formation: The leader answered a question outside their lane, confidently, whether or not the answer was correct.
-   1 Holding Position: Stayed inside their lane by accident. The hard question never came, or was deflected without recognizing why.
-   2 Closing the Gap: Recognized a question was above their altitude and said so, but the handoff was awkward, apologetic, or left the counterpart without a next step.
-   3 Within One Inch: Named the limit cleanly, without apology, and handed off with a specific person and a specific next step.
+   1 Out of Formation: The leader answered a question outside their lane, confidently, whether or not the answer was correct.
+   2 Holding Position: Stayed inside their lane by accident. The hard question never came, or was deflected without recognizing why.
+   3 Closing the Gap: Recognized a question was above their altitude and said so, but the handoff was awkward, apologetic, or left the counterpart without a next step.
+   4 Within One Inch: Named the limit cleanly, without apology, and handed off with a specific person and a specific next step.
 
 Respond in EXACTLY this format. Keep every field on a single line, no line breaks inside a field:
 
 ---DEBRIEF---
-ASPIRATION_SCORE:[0-3]
+ASPIRATION_SCORE:[1-4]
 ASPIRATION_TIER:[Out of Formation|Holding Position|Closing the Gap|Within One Inch]
 ASPIRATION_EVIDENCE:[direct quote from the leader]
 ASPIRATION_COST:[specific consequence in this conversation, quoting the leader]
 ASPIRATION_ONEINCH:[the corrective sentence they could have said instead]
-CONSTRAINT_SCORE:[0-3]
+CONSTRAINT_SCORE:[1-4]
 CONSTRAINT_TIER:[tier name]
 CONSTRAINT_EVIDENCE:[direct quote]
 CONSTRAINT_COST:[specific consequence]
 CONSTRAINT_ONEINCH:[corrective sentence]
-DECISION_SCORE:[0-3]
+DECISION_SCORE:[1-4]
 DECISION_TIER:[tier name]
 DECISION_EVIDENCE:[direct quote]
 DECISION_COST:[specific consequence]
 DECISION_ONEINCH:[corrective sentence]
-SIMPLICITY_SCORE:[0-3]
+SIMPLICITY_SCORE:[1-4]
 SIMPLICITY_TIER:[tier name]
 SIMPLICITY_EVIDENCE:[direct quote]
 SIMPLICITY_COST:[specific consequence]
 SIMPLICITY_ONEINCH:[corrective sentence]
-BOUNDARY_SCORE:[0-3]
+BOUNDARY_SCORE:[1-4]
 BOUNDARY_TIER:[tier name]
 BOUNDARY_EVIDENCE:[direct quote]
 BOUNDARY_COST:[specific consequence]
@@ -862,7 +865,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
             <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 8, marginBottom: 16 }}>
               <div style={{ background: W, border: `0.5px solid ${B}`, borderRadius: 8, padding: "10px 12px" }}>
                 <div style={{ fontFamily: SF, fontSize: 10, color: M, marginBottom: 4 }}>Score</div>
-                <div style={{ fontFamily: PF, fontSize: 24, fontWeight: 400, color: N, lineHeight: 1 }}>{debrief.rawTotal}<span style={{ fontFamily: SF, fontSize: 11, color: M, fontWeight: 400 }}> / 15</span></div>
+                <div style={{ fontFamily: PF, fontSize: 24, fontWeight: 400, color: N, lineHeight: 1 }}>{debrief.rawTotal}<span style={{ fontFamily: SF, fontSize: 11, color: M, fontWeight: 400 }}> / 20</span></div>
               </div>
               <div style={{ background: W, border: `0.5px solid ${B}`, borderRadius: 8, padding: "10px 12px" }}>
                 <div style={{ fontFamily: SF, fontSize: 10, color: M, marginBottom: 4 }}>Strongest</div>
