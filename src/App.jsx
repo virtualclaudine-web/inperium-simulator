@@ -464,10 +464,19 @@ Answer questions about the Inperium Communications Field Guide accurately and co
 
   const FLIPSCRIPT_SYS = LIVE_FG + `
 
-=== YOUR ROLE: INPERIUM EXPERT LEADER ===
-The user is playing a skeptic, prospect, board member, donor, or other challenging counterpart. Respond as a highly skilled, trained Inperium leader — calm, confident, grounded in the Field Guide. Use exact frameworks: lead with proof not explanation, follow the Credibility Stack, use the right story, deploy the Stat-Then-Meaning rule, use correct Words That Work language.
+=== YOUR ROLE: TEACHING MODE — INPERIUM EXPERT LEADER ===
+The user is playing a skeptic, prospect, board member, donor, or other challenging counterpart. Respond as a highly skilled, trained Inperium leader — calm, confident, grounded in the Field Guide.
+
+This is a teaching tool, not just a role-play — the person using it is learning what to say by watching you say it well. That means every answer must be concrete and specific, never generic reassurance:
+- First, check the Story Library and Objection Bank above for anything that matches or resembles what was just asked.
+- If a story applies, name it explicitly and use its specific proof point — a real number, a real outcome, a real organization — as the backbone of your answer. For example, if someone says their organization is "too large" or "too different" for Inperium, don't reassure them in the abstract — point to a specific, comparable organization from the Story Library above and say what actually happened with them.
+- If the Objection Bank above has a response mapped to this objection, use it as your foundation, adapted naturally to the exact words this person used, not recited verbatim.
+- If nothing in the material above is genuinely relevant to this specific question, say so honestly and reason from the Field Guide's frameworks instead — never invent a story, a statistic, or a named organization that isn't in the material above.
+- Beyond the specific story, also use the exact frameworks: lead with proof not explanation, follow the Credibility Stack, deploy the Stat-Then-Meaning rule, use correct Words That Work language.
+
 If the question includes a tone or emotional cue — a bracketed tag, or a stage direction like *(asked in an anxious tone)* — let it shape how you respond: de-escalate real anxiety, hold your ground against hostility, slow down for someone who's overwhelmed — without ever losing the calm, grounded register. Don't just answer the words; answer the person. Never mention or explain the tone tag itself in your response.
-After your response, add a brief coaching note in italics starting with "Coach note:" explaining which framework you used and why.`;
+
+After your response, add a brief coaching note in italics starting with "Coach note:" naming which specific story or proof point you used and why it fit, or which framework you used if no specific story applied.`;
 
   // Loading screen
   if (content.loading) return (
@@ -679,8 +688,8 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
         {/* Tools */}
         <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 500, letterSpacing: "0.1em", textTransform: "uppercase", color: N, marginBottom: 14, marginTop: 28 }}>Reference & tools</div>
         {[
+          { screen: "flipscript", icon: "🎓", title: "Teaching Mode", badge: "Learn the answers", desc: "Ask the hardest question you can think of. See exactly how an expert would answer — backed by real Inperium stories and proof points, not generic reassurance." },
           { screen: "reference", icon: "📖", title: "Field Guide reference", badge: "Quick lookup", desc: "Look up exact language, objection responses, stories, and the Credibility Stack." },
-          { screen: "flipscript", icon: "🔄", title: "Flip the Script", badge: "Role reversal", desc: "You ask the hard question — the simulator shows you exactly how an expert would answer it." },
           { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "2 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
         ].map(tool => (
           <div key={tool.screen} onClick={() => setScreen(tool.screen)}
@@ -877,6 +886,19 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
             <div style={{ background: N, borderRadius: 10, padding: "14px 18px", marginBottom: 10 }}>
               <div style={{ fontFamily: PF, fontSize: 18, fontWeight: 400, color: CR }}>{debrief.status}</div>
             </div>
+            {/* Formation key — full ladder, current position highlighted */}
+            <div style={{ marginBottom: 16 }}>
+              {STATUS_ORDER.map((tier, i) => {
+                const isCurrent = tier === debrief.status;
+                return (
+                  <div key={tier} style={{ display: "flex", alignItems: "center", gap: 8, padding: "6px 10px", borderRadius: 6, background: isCurrent ? N : "transparent", marginBottom: 2 }}>
+                    <span style={{ width: 16, height: 16, borderRadius: "50%", background: isCurrent ? BR : B, color: isCurrent ? W : M, fontSize: 9, fontFamily: SF, fontWeight: 600, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }}>{i + 1}</span>
+                    <span style={{ fontFamily: SF, fontSize: 11, fontWeight: isCurrent ? 600 : 400, color: isCurrent ? CR : M }}>{tier}</span>
+                    {isCurrent && <span style={{ marginLeft: "auto", fontSize: 8, letterSpacing: "0.06em", color: BR, fontFamily: SF, fontWeight: 600, flexShrink: 0 }}>YOU ARE HERE</span>}
+                  </div>
+                );
+              })}
+            </div>
             {debrief.languageScan?.fired && (
               <div style={{ background: "#FCEBEB", border: "0.5px solid #E8A3A3", borderRadius: 8, padding: "8px 12px", marginBottom: 16, fontFamily: SF, fontSize: 11, color: "#7C1F1F" }}>
                 Flagged: {debrief.languageScan.terms.join(", ")}
@@ -997,10 +1019,10 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
   if (screen === "flipscript") return (
     <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; } ::-webkit-scrollbar{width:3px} ::-webkit-scrollbar-thumb{background:rgba(13,34,64,0.2);border-radius:2px} @keyframes pulse{0%,100%{opacity:0.3}50%{opacity:1}}`}</style>
-      <TopBar sub="Flip the Script" showBack onBack={goHome} lastFetched={content.lastFetched} />
+      <TopBar sub="Teaching Mode" showBack onBack={goHome} lastFetched={content.lastFetched} />
       <div style={{ background: W, borderBottom: `1px solid ${B}`, padding: "12px 28px", flexShrink: 0 }}>
-        <div style={{ fontFamily: PF, fontSize: 16, fontWeight: 500, color: N, marginBottom: 4 }}>Flip the Script</div>
-        <div style={{ fontFamily: SF, fontSize: 12, color: M, lineHeight: 1.6, maxWidth: 560 }}>You play the skeptic, prospect, or board member. Ask any hard question — the simulator responds as an expert Inperium leader, using the exact language and frameworks from the Field Guide.</div>
+        <div style={{ fontFamily: PF, fontSize: 16, fontWeight: 500, color: N, marginBottom: 4 }}>Teaching Mode</div>
+        <div style={{ fontFamily: SF, fontSize: 12, color: M, lineHeight: 1.6, maxWidth: 560 }}>You play the skeptic, prospect, or board member. Ask any hard question — the simulator answers as an expert Inperium leader would, naming the actual story or proof point that applies, not a generic reassurance. Learn it here, then use it without help in Practice.</div>
       </div>
       <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
         {refMessages.length === 0 ? (
@@ -1012,7 +1034,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
                 "We'll lose our independence if we do this.",
                 "My board will never give up control.",
                 "We're not in crisis — why would we do this now?",
-                "Our culture is unique. You can't standardize what we do.",
+                "I like what you do, but we're too large for Inperium. I think you're better suited to smaller organizations.",
                 "Too good to be true. What am I actually giving up?",
                 "What happens to our CEO?",
                 "Our donors won't understand this.",
