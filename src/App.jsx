@@ -1134,7 +1134,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
 
         {[
           { href: "/resources/inperium-communications-field-guide.pdf", icon: "📖", title: "Communications Field Guide", desc: "The field version — frameworks, language, and quick reference for real conversations." },
-          { href: "/resources/inperium-communications-toolkit.pdf", icon: "📘", title: "Communications Toolkit", desc: "The full working draft — every chapter, the complete Story Library, and the Objection Bank." },
+          { href: "/resources/inperium-communications-toolkit.pdf", icon: "📘", title: "Communications Toolkit", desc: "The complete document — every chapter, the full Story Library, and the Objection Bank." },
           { href: "/resources/inperium-reference-card.pdf", icon: "🗂️", title: "Reference Card", desc: "The two-sided quick-reference card — Credibility Stack, altitudes, and elevation language at a glance." },
         ].map(r => (
           <a key={r.href} href={r.href} target="_blank" rel="noopener noreferrer"

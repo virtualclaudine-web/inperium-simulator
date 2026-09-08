@@ -44,7 +44,7 @@ async function getListItems(token, siteId, listName) {
 
 function buildToolkit(rows) {
   const active = rows.filter(r => r.field_4 === "Active");
-  let text = `=== INPERIUM COMMUNICATIONS TOOLKIT v5 ===\n\n`;
+  let text = `=== INPERIUM COMMUNICATIONS TOOLKIT ===\n\n`;
   active.forEach(r => {
     const title = r.field_1 || "";
     const part = r.field_2 || "";
