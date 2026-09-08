@@ -466,34 +466,34 @@ DIMENSIONS:
 
 ${buildRubricDimensionsText(content.rubric)}
 
-Respond in EXACTLY this format. Keep every field on a single line, no line breaks inside a field:
+Respond in EXACTLY this format. Keep every field on a single line, no line breaks inside a field. COST fields: 2-3 sentences, specific and concrete, never a single clipped line and never a full paragraph. ONEINCH fields: exactly one sentence — the actual words they could have said.
 
 ---DEBRIEF---
 ASPIRATION_SCORE:[1-4]
 ASPIRATION_TIER:[Out of Formation|Holding Position|Closing the Gap|Within One Inch]
 ASPIRATION_EVIDENCE:[direct quote from the leader]
-ASPIRATION_COST:[specific consequence in this conversation, quoting the leader]
-ASPIRATION_ONEINCH:[the corrective sentence they could have said instead]
+ASPIRATION_COST:[2-3 sentences: specific consequence in this conversation, quoting the leader]
+ASPIRATION_ONEINCH:[one sentence: the corrective line they could have said instead]
 CONSTRAINT_SCORE:[1-4]
 CONSTRAINT_TIER:[tier name]
 CONSTRAINT_EVIDENCE:[direct quote]
-CONSTRAINT_COST:[specific consequence]
-CONSTRAINT_ONEINCH:[corrective sentence]
+CONSTRAINT_COST:[2-3 sentences: specific consequence]
+CONSTRAINT_ONEINCH:[one sentence: corrective line]
 DECISION_SCORE:[1-4]
 DECISION_TIER:[tier name]
 DECISION_EVIDENCE:[direct quote]
-DECISION_COST:[specific consequence]
-DECISION_ONEINCH:[corrective sentence]
+DECISION_COST:[2-3 sentences: specific consequence]
+DECISION_ONEINCH:[one sentence: corrective line]
 SIMPLICITY_SCORE:[1-4]
 SIMPLICITY_TIER:[tier name]
 SIMPLICITY_EVIDENCE:[direct quote]
-SIMPLICITY_COST:[specific consequence]
-SIMPLICITY_ONEINCH:[corrective sentence]
+SIMPLICITY_COST:[2-3 sentences: specific consequence]
+SIMPLICITY_ONEINCH:[one sentence: corrective line]
 BOUNDARY_SCORE:[1-4]
 BOUNDARY_TIER:[tier name]
 BOUNDARY_EVIDENCE:[direct quote]
-BOUNDARY_COST:[specific consequence]
-BOUNDARY_ONEINCH:[corrective sentence]
+BOUNDARY_COST:[2-3 sentences: specific consequence]
+BOUNDARY_ONEINCH:[one sentence: corrective line]
 ---END_DEBRIEF---`;
 
   const REFERENCE_SYS = LIVE_FG + `
