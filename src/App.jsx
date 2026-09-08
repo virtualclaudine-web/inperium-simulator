@@ -691,6 +691,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
           { screen: "flipscript", icon: "🎓", title: "Teaching Mode", badge: "Learn the answers", desc: "Ask the hardest question you can think of. See exactly how an expert would answer — backed by real Inperium stories and proof points, not generic reassurance." },
           { screen: "reference", icon: "📖", title: "Field Guide reference", badge: "Quick lookup", desc: "Look up exact language, objection responses, stories, and the Credibility Stack." },
           { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "2 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
+          { screen: "resources", icon: "📄", title: "Resources", badge: "PDFs", desc: "The full Communications Field Guide, Toolkit, and Reference Card — download or open anytime." },
         ].map(tool => (
           <div key={tool.screen} onClick={() => setScreen(tool.screen)}
             style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "13px 16px", cursor: "pointer", display: "flex", alignItems: "center", gap: 12, marginBottom: 8, transition: "all 0.15s" }}
@@ -1101,6 +1102,36 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
           </div>
           {refMessages.length > 0 && <button onClick={() => setRefMessages([])} style={{ marginTop: 8, fontFamily: SF, fontSize: 11, color: M, background: "transparent", border: "none", cursor: "pointer", textDecoration: "underline" }}>Start over</button>}
         </div>
+      </div>
+    </div>
+  );
+
+  // ── RESOURCES ─────────────────────────────────────────────────
+  if (screen === "resources") return (
+    <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+      <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
+      <TopBar sub="Resources" showBack onBack={goHome} lastFetched={content.lastFetched} />
+      <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
+        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Resources</h2>
+        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "1.75rem", lineHeight: 1.65 }}>The source material behind everything in this simulator. Open or download anytime.</p>
+
+        {[
+          { href: "/resources/inperium-communications-field-guide.pdf", icon: "📖", title: "Communications Field Guide", desc: "The field version — frameworks, language, and quick reference for real conversations." },
+          { href: "/resources/inperium-communications-toolkit.pdf", icon: "📘", title: "Communications Toolkit", desc: "The full working draft — every chapter, the complete Story Library, and the Objection Bank." },
+          { href: "/resources/inperium-reference-card.pdf", icon: "🗂️", title: "Reference Card", desc: "The two-sided quick-reference card — Credibility Stack, altitudes, and elevation language at a glance." },
+        ].map(r => (
+          <a key={r.href} href={r.href} target="_blank" rel="noopener noreferrer"
+            style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, transition: "all 0.15s", textDecoration: "none" }}
+            onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 10px rgba(13,34,64,0.08)"; }}
+            onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.12)"; e.currentTarget.style.boxShadow = "none"; }}>
+            <div style={{ width: 38, height: 38, borderRadius: 9, background: CS, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>{r.icon}</div>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N, marginBottom: 3 }}>{r.title}</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>{r.desc}</div>
+            </div>
+            <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>↗</div>
+          </a>
+        ))}
       </div>
     </div>
   );
