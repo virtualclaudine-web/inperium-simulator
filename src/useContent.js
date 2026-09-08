@@ -11,6 +11,7 @@ const LIST_NAMES = {
   objections: "Objections",
   scenarios: "Scenarios",
   rubric: "Rubric-Live",
+  learnStories: "Story-Learn",
 };
 
 async function getToken() {
@@ -127,6 +128,14 @@ function buildRubric(rows) {
   }));
 }
 
+function buildLearnStories(rows) {
+  return rows.filter(r => (r.field_3 === "Live" || r.Status === "Live") && r.Title).map(r => ({
+    trigger: (r.Title || "").trim(),
+    storyTitle: r.field_1 || r["Story Title"] || "",
+    answer: r.field_2 || r.Answer || "",
+  }));
+}
+
 function buildSystemPrompt(toolkit, fieldGuide, stories, objections) {
   // Full Toolkit is the primary knowledge base — Field Guide adds the quick-reference layer
   let prompt = toolkit + "\n\n" + fieldGuide;
@@ -155,6 +164,7 @@ export function useContent() {
     objections: null,
     scenarios: null,
     rubric: null,
+    learnStories: null,
     systemPrompt: null,
     lastFetched: null,
   });
@@ -183,6 +193,14 @@ export function useContent() {
         } catch (rubricErr) {
           console.error("Rubric-Live fetch failed, falling back to built-in rubric text:", rubricErr);
         }
+        let learnStories = null;
+        try {
+          const lsRows = await getListItems(token, siteId, LIST_NAMES.learnStories);
+          learnStories = buildLearnStories(lsRows);
+          console.log("Story-Learn rows loaded:", learnStories.length, "of", lsRows.length, "raw rows");
+        } catch (learnErr) {
+          console.error("Story-Learn fetch failed, falling back to built-in Learn mode content:", learnErr);
+        }
         const toolkitText = buildToolkit(tkRows);
         if (tkRows.length > 0) {
           console.log("Toolkit active rows:", tkRows.filter(r => r.field_4 === "Active").length, "of", tkRows.length);
@@ -196,7 +214,7 @@ export function useContent() {
         const systemPrompt = buildSystemPrompt(toolkitText, fieldGuideText, stories, objections);
         setState({
           loading: false, error: null,
-          fieldGuideText, languageGuide, stories, objections, scenarios, rubric, systemPrompt,
+          fieldGuideText, languageGuide, stories, objections, scenarios, rubric, learnStories, systemPrompt,
           lastFetched: new Date(),
         });
       } catch (err) {

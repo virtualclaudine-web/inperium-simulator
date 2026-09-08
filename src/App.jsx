@@ -249,6 +249,22 @@ function buildRubricDimensionsText(rubric) {
   return sections.join("\n\n");
 }
 
+// Used only if the Story-Learn SharePoint list fails to load or comes back
+// incomplete -- keeps Learn mode working regardless of content-source issues.
+const FALLBACK_LEARN_STORIES = [
+  { trigger: "If we affiliate, will we lose our identity?", storyTitle: "CHOR: 130 Years, Still CHOR", answer: "No. CHOR has served Reading, Pennsylvania for 130 years. Same name on the building, same board, same CEO. What changed was the financial infrastructure, not the identity. They moved from a $1 million deficit to a $3.6 million surplus, and programs doubled from 15 to 40. CHOR did not become Inperium. CHOR became a stronger version of CHOR." },
+  { trigger: "What if we are skeptical and not in crisis?", storyTitle: "Jay and Edison Court", answer: "You do not have to be desperate to benefit. Jay ran every financial scenario, called other affiliate CEOs, and pushed his board to challenge every assumption before agreeing. Edison Court was stable, not in trouble. He affiliated because the model offered infrastructure he could not build alone. Revenue grew 26 percent in year one, and eight years later he is still the CEO, now taking on broader leadership across the constellation by choice." },
+  { trigger: "Does this model actually hold up financially?", storyTitle: "The Bond Market Verdict", answer: "Yes, and the proof is not opinion, it is money. Inperium sought $175 million in municipal bonds. The response was $1.9 billion in orders, eleven times oversubscribed. Firms like BlackRock, Vanguard, Fidelity, and AllianceBernstein spent months in due diligence looking for reasons to walk away and found none. That level of institutional scrutiny and confidence is not a talking point, it is a verdict." },
+  { trigger: "What happens if we hit a real financial emergency?", storyTitle: "The $400K Wire", answer: "You get real help, fast. Advancing Opportunities called because Friday payroll was not going to clear. Within the week, $400,000 was wired, not a punitive loan, not a bailout with strings attached, but a capital investment in stabilization. Staff got paid, programs continued, and the families they serve never knew anything had happened. The question worth asking: if Friday payroll was going to bounce, who would you call?" },
+  { trigger: "Does this model work at different sizes and in different places?", storyTitle: "Global Systems, Local Mission", answer: "Yes. Ten years ago it was 25 people in one building in Pennsylvania. Today it is 3,000 people across eight states, serving populations from adults with disabilities to children in foster care to veterans. The infrastructure underneath, like Oracle Cloud, insurance, HR, and IT, is the same everywhere. What stays entirely local is the mission, the culture, and the leadership. Global systems, local mission." },
+  { trigger: "Will this model hold up under extreme pressure?", storyTitle: "RHD Under Pressure", answer: "It already has. RHD serves 30,000 people across 14 states. They were losing a million dollars a month, ending FY2024 with an $11 million deficit. Through affiliation and the Apis platform, FY2025 closed with a $3 million surplus, with projections of $10 to $12 million going forward. It took eight rounds of layoffs and hard restructuring, but not a single consumer lost services." },
+  { trigger: "Why does any of this actually matter?", storyTitle: "Maria and Diane", answer: "Because of people like Maria, a single mother in Philadelphia whose son has behavioral health challenges. Her CEO, Diane, used to spend 70 percent of her time on financial management instead of programs. After affiliation, Diane got that time back and used it to add an evening support group, a parent coaching program, and a crisis line Maria can call at two in the morning. Maria does not know what affiliation means. She knows the program keeping her family together got better." },
+  { trigger: "What does affiliation look like once the transition is over?", storyTitle: "Advancing Opportunities, Seven Years In", answer: "It looks like leadership finally free to grow. Advancing Opportunities has been affiliated seven years, with 5 percent annual growth consistently. Three of five IDD housing developers in New Jersey now direct business to AO, and the state has approached them three times in two years to take over group homes from struggling agencies. As their CEO puts it, you cannot cut your way to success. Freeing up leadership capacity is what drove the growth." },
+  { trigger: "What is still hard, and why should we trust that answer?", storyTitle: "The Honest Answer", answer: "The CEO at Advancing Opportunities has been affiliated seven years, long enough to give an honest answer. Before affiliation: stress, paycheck-to-paycheck worry, missed payroll. What is still hard today: HR. But he stays for everything else, financial stability, growth capacity, and a peer network he could never build alone. Seven years of staying, with full knowledge of the imperfections, is proof the model works." },
+  { trigger: "What does it actually feel like to be part of the constellation?", storyTitle: "Craig Cook: \"These Are My People\"", answer: "It feels like belonging. Craig Cook had already done his financial diligence when he walked into his first leadership meeting knowing no one. What he found was a room of leaders analyzing challenges together and sharing failures honestly, with no posturing. His reaction: \"These are my people.\" The numbers justify the decision. The people confirm it." },
+  { trigger: "What happens if we do nothing?", storyTitle: "The Safety Net", answer: "Some organizations in this network would not exist today without Inperium. Not poorly run organizations, but ones with strong outcomes and decades of community trust that were weeks from closing. Inperium stepped in, including wiring $400,000 within a week when one could not make payroll, and turning an $11 million deficit into a $3 million surplus at another. In every case, services continued without interruption and the families served never knew how close it came. That safety net is part of what affiliation provides, whether or not you are in crisis today." },
+];
+
 function parseDebrief(text, languageScan) {
   const m = text.match(/---DEBRIEF---([\s\S]*?)---END_DEBRIEF---/);
   if (!m) return null;
@@ -391,6 +407,7 @@ export default function App() {
   const [recallInput, setRecallInput] = useState("");
   const [recallResult, setRecallResult] = useState(null);
   const [recallLoading, setRecallLoading] = useState(false);
+  const [learnOpenIndex, setLearnOpenIndex] = useState(null);
   const endRef = useRef(null);
   const taRef = useRef(null);
   const refEndRef = useRef(null);
@@ -651,7 +668,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
 
   const onKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); send(); } };
   const onRefKey = (e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); sendRef(); } };
-  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); setSelectedTone(null); setStorySelectionRound(null); setStorySelectionChoice(null); setStorySelectionFeedback(null); setRecallStory(null); setRecallPhase("study"); setRecallInput(""); setRecallResult(null); };
+  const goHome = () => { setScreen("home"); setMessages([]); setScenario(null); setCategory(null); setDebrief(null); setRefMessages([]); setRefInput(""); setSelectedTone(null); setStorySelectionRound(null); setStorySelectionChoice(null); setStorySelectionFeedback(null); setRecallStory(null); setRecallPhase("study"); setRecallInput(""); setRecallResult(null); setLearnOpenIndex(null); };
   const fmtTime = (s) => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, "0")}`;
 
   // ── HOME ──────────────────────────────────────────────────────
@@ -690,7 +707,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
         {[
           { screen: "flipscript", icon: "🎓", title: "Teaching Mode", badge: "Learn the answers", desc: "Ask the hardest question you can think of. See exactly how an expert would answer — backed by real Inperium stories and proof points, not generic reassurance." },
           { screen: "reference", icon: "📖", title: "Field Guide reference", badge: "Quick lookup", desc: "Look up exact language, objection responses, stories, and the Credibility Stack." },
-          { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "2 modes", desc: "Pick the right story for the moment, then deliver it from memory — retaining the human detail and the proof point." },
+          { screen: "storytelling", icon: "📚", title: "Storytelling Practice", badge: "3 modes", desc: "Learn the stories, pick the right one for the moment, then deliver it from memory — retaining the human detail and the proof point." },
           { screen: "resources", icon: "📄", title: "Resources", badge: "PDFs", desc: "The full Communications Field Guide, Toolkit, and Reference Card — download or open anytime." },
         ].map(tool => (
           <div key={tool.screen} onClick={() => setScreen(tool.screen)}
@@ -1136,14 +1153,63 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
     </div>
   );
 
+  // ── STORYTELLING: LEARN ──────────────────────────────────────────
+  if (screen === "storytelling-learn") {
+    const learnStories = (content.learnStories && content.learnStories.length > 0) ? content.learnStories : FALLBACK_LEARN_STORIES;
+    return (
+      <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
+        <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
+        <TopBar sub="Storytelling · Learn" showBack onBack={goHome} lastFetched={content.lastFetched} />
+        <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%", overflowY: "auto" }}>
+          <h2 style={{ fontFamily: PF, fontSize: 22, fontWeight: 400, color: N, marginBottom: 6 }}>The questions you'll actually get asked.</h2>
+          <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "1.75rem", lineHeight: 1.65 }}>Tap a question to see the story or proof point that answers it. Once these feel familiar, test yourself in Selection.</p>
+
+          {learnStories.map((item, i) => {
+            const open = learnOpenIndex === i;
+            return (
+              <div key={i} style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, marginBottom: 8, overflow: "hidden" }}>
+                <div onClick={() => setLearnOpenIndex(open ? null : i)}
+                  style={{ padding: "14px 18px", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "space-between", gap: 12 }}>
+                  <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N, lineHeight: 1.4 }}>{item.trigger}</span>
+                  <span style={{ color: M, fontSize: 14, flexShrink: 0, transform: open ? "rotate(45deg)" : "none", transition: "transform 0.15s" }}>+</span>
+                </div>
+                {open && (
+                  <div style={{ padding: "0 18px 18px" }}>
+                    <div style={{ fontFamily: SF, fontSize: 9, letterSpacing: "0.1em", textTransform: "uppercase", color: BR, fontWeight: 500, marginBottom: 8 }}>{item.storyTitle}</div>
+                    <div style={{ fontFamily: PF, fontSize: 13, lineHeight: 1.75, color: N }}>{item.answer}</div>
+                  </div>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+    );
+  }
+
   // ── STORYTELLING: MENU ───────────────────────────────────────────
   if (screen === "storytelling") return (
     <div style={{ minHeight: "100vh", background: CR, display: "flex", flexDirection: "column" }}>
       <style>{`* { box-sizing:border-box; margin:0; padding:0; }`}</style>
       <TopBar sub="Storytelling Practice" showBack onBack={goHome} lastFetched={content.lastFetched} />
       <div className="ip-page" style={{ flex: 1, padding: "2.5rem 3rem", maxWidth: 760, margin: "0 auto", width: "100%" }}>
-        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Two ways to practice.</h2>
-        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Pick the right story, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
+        <h2 style={{ fontFamily: PF, fontSize: 26, fontWeight: 400, color: N, marginBottom: 6 }}>Three ways to practice.</h2>
+        <p style={{ fontFamily: SF, fontSize: 13, color: M, marginBottom: "2rem", lineHeight: 1.65, maxWidth: 560 }}>Learn the stories, pick the right one, then be able to tell it without notes — while keeping the human detail and the proof point intact.</p>
+
+        <div onClick={() => { setLearnOpenIndex(null); setScreen("storytelling-learn"); }}
+          style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, transition: "all 0.15s" }}
+          onMouseEnter={e => { e.currentTarget.style.borderColor = N; e.currentTarget.style.boxShadow = "0 2px 10px rgba(13,34,64,0.08)"; }}
+          onMouseLeave={e => { e.currentTarget.style.borderColor = "rgba(13,34,64,0.12)"; e.currentTarget.style.boxShadow = "none"; }}>
+          <div style={{ width: 38, height: 38, borderRadius: 9, background: CS, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, fontSize: 18 }}>💡</div>
+          <div style={{ flex: 1 }}>
+            <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
+              <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Learn</span>
+              <span style={{ fontFamily: SF, fontSize: 10, background: CS, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Start here</span>
+            </div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>The questions you'll actually get asked, and the exact story or proof point that answers each one.</div>
+          </div>
+          <div style={{ color: M, fontSize: 14, flexShrink: 0 }}>→</div>
+        </div>
 
         <div onClick={() => { startSelectionRound(); setScreen("storytelling-selection"); }}
           style={{ background: W, border: `1px solid rgba(13,34,64,0.12)`, borderRadius: 10, padding: "16px 18px", cursor: "pointer", display: "flex", alignItems: "center", gap: 14, marginBottom: 10, transition: "all 0.15s" }}
@@ -1153,7 +1219,7 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
           <div style={{ flex: 1 }}>
             <div style={{ display: "flex", alignItems: "center", gap: 8, marginBottom: 3 }}>
               <span style={{ fontFamily: PF, fontSize: 14, fontWeight: 500, color: N }}>Selection</span>
-              <span style={{ fontFamily: SF, fontSize: 10, background: CS, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Mode 1</span>
+              <span style={{ fontFamily: SF, fontSize: 10, background: CS, color: M, padding: "2px 8px", borderRadius: 20, fontWeight: 500 }}>Mode 2</span>
             </div>
             <div style={{ fontFamily: SF, fontSize: 11, color: M, lineHeight: 1.55 }}>Given an objection, choose the story that fits — get immediate feedback on your pick.</div>
           </div>
