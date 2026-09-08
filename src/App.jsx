@@ -406,6 +406,23 @@ export default function App() {
     return () => window.removeEventListener("popstate", onPopState);
   }, []);
 
+  // Modern browsers stopped mapping the Backspace key to "go back" years ago
+  // (too many accidental navigations while typing) -- has to be added
+  // deliberately. Only fires when focus isn't in an editable field, so it
+  // never interferes with deleting text anywhere in the app.
+  useEffect(() => {
+    const onKeyDown = (e) => {
+      if (e.key !== "Backspace") return;
+      const el = document.activeElement;
+      const isEditable = el && (el.tagName === "INPUT" || el.tagName === "TEXTAREA" || el.isContentEditable);
+      if (isEditable) return;
+      e.preventDefault();
+      window.history.back();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, []);
+
   const [category, setCategory] = useState(null);
   const [scenario, setScenario] = useState(null);
   const [messages, setMessages] = useState([]);
