@@ -384,6 +384,28 @@ function ScoreBar({ label, score }) {
 export default function App() {
   const content = useContent();
   const [screen, setScreen] = useState("home");
+  const isPopStateNav = useRef(false);
+
+  // Sync in-app screen changes to browser history so the back/forward
+  // buttons (and mobile swipe-back) step through the app instead of
+  // leaving the site entirely -- this app has no router, so without
+  // this the URL never changes and "back" just exits to whatever page
+  // was open before the simulator.
+  useEffect(() => {
+    if (isPopStateNav.current) { isPopStateNav.current = false; return; }
+    window.history.pushState({ screen }, "");
+  }, [screen]);
+
+  useEffect(() => {
+    window.history.replaceState({ screen: "home" }, "");
+    const onPopState = (e) => {
+      isPopStateNav.current = true;
+      setScreen(e.state?.screen || "home");
+    };
+    window.addEventListener("popstate", onPopState);
+    return () => window.removeEventListener("popstate", onPopState);
+  }, []);
+
   const [category, setCategory] = useState(null);
   const [scenario, setScenario] = useState(null);
   const [messages, setMessages] = useState([]);
@@ -1134,7 +1156,6 @@ CORRECTIVE_QUOTE:[a short quote from the reference story to fill the gap — lea
 
         {[
           { href: "/resources/inperium-communications-field-guide.pdf", icon: "📖", title: "Communications Field Guide", desc: "The field version — frameworks, language, and quick reference for real conversations." },
-          { href: "/resources/inperium-communications-toolkit.pdf", icon: "📘", title: "Communications Toolkit", desc: "The complete document — every chapter, the full Story Library, and the Objection Bank." },
           { href: "/resources/inperium-reference-card.pdf", icon: "🗂️", title: "Reference Card", desc: "The two-sided quick-reference card — Credibility Stack, altitudes, and elevation language at a glance." },
         ].map(r => (
           <a key={r.href} href={r.href} target="_blank" rel="noopener noreferrer"
